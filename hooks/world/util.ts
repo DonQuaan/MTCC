@@ -110,8 +110,8 @@ export type Pt = [number, number]
 /** Đa giác/đường gấp khúc thẳng: "M x y L x y …" (số nguyên). */
 export function poly(points: Pt[], closed = false): string {
   if (points.length === 0) return ''
-  const d = 'M' + points.map(p => `${n0(p[0])} ${n0(p[1])}`).join('L')
-  return closed ? d + 'Z' : d
+  const d = `M${points.map(p => `${n0(p[0])} ${n0(p[1])}`).join('L')}`
+  return closed ? `${d}Z` : d
 }
 
 /** Đường cong mượt qua các điểm (Q với trung điểm). */
@@ -127,7 +127,7 @@ export function smoothPath(points: Pt[], closed = false): string {
   }
   const last = points[points.length - 1] as Pt
   d += `L${n0(last[0])} ${n0(last[1])}`
-  return closed ? d + 'Z' : d
+  return closed ? `${d}Z` : d
 }
 
 /** Khối hữu cơ (tán lá, đá, bụi): vòng kín méo bằng nhiễu. */
@@ -148,7 +148,7 @@ export function blob(cx: number, cy: number, rx: number, ry: number, r: () => nu
 export function ridgeFill(x0: number, x1: number, step: number, y: (x: number) => number, bottom: number): string {
   const pts: Pt[] = []
   for (let x = x0; x <= x1 + 0.001; x += step) pts.push([x, y(x)])
-  return smoothPath(pts) + `L${n0(x1)} ${n0(bottom)}L${n0(x0)} ${n0(bottom)}Z`
+  return `${smoothPath(pts)}L${n0(x1)} ${n0(bottom)}L${n0(x0)} ${n0(bottom)}Z`
 }
 
 export function esc(text: string): string {
@@ -172,7 +172,7 @@ export function oklch(L: number, C: number, h: number): string {
     '#' +
     lin
       .map(x => {
-        const v = x <= 0.0031308 ? 12.92 * x : 1.055 * Math.pow(Math.max(x, 0), 1 / 2.4) - 0.055
+        const v = x <= 0.0031308 ? 12.92 * x : 1.055 * Math.max(x, 0) ** (1 / 2.4) - 0.055
         return Math.round(clamp(v, 0, 1) * 255)
           .toString(16)
           .padStart(2, '0')
@@ -185,7 +185,7 @@ export function oklch(L: number, C: number, h: number): string {
 export function mix(a: string, b: string, t: number): string {
   const pa = [1, 3, 5].map(i => parseInt(a.slice(i, i + 2), 16))
   const pb = [1, 3, 5].map(i => parseInt(b.slice(i, i + 2), 16))
-  return '#' + pa.map((v, i) => Math.round(lerp(v, pb[i] as number, t)).toString(16).padStart(2, '0')).join('')
+  return `#${pa.map((v, i) => Math.round(lerp(v, pb[i] as number, t)).toString(16).padStart(2, '0')).join('')}`
 }
 
 // ───────────────────────── Địa hình lớp 3 (liên tục toàn thế giới) ─────────────────────────

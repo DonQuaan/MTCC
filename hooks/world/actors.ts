@@ -400,7 +400,7 @@ function fireflies(ctx: Ctx, spots: Spot[], acc: Acc) {
       const rx = 45 + r() * 15
       halos += `<ellipse cx="${n0(cx)}" cy="${n0(sp.y - 16 * s)}" rx="${n0(rx)}" ry="${n0(rx * 0.6)}" fill="url(#gg)" opacity="${f3(0.05 + r() * 0.02)}"/>`
     }
-    let glow = halos + `<g style="--dl:${ctx.ph(48, `ac-domdom-${id}`)}">`
+    let glow = `${halos}<g style="--dl:${ctx.ph(48, `ac-domdom-${id}`)}">`
     const spread = Math.min(w / nc, 170)
     for (let i = 0; i < n; i += 1) {
       const x = (cs[i % nc] as number) + (r() - 0.5) * spread
@@ -632,7 +632,7 @@ function lanterns(ctx: Ctx, spots: Spot[], acc: Acc) {
     const sizes: number[] = [1]
     for (let left = n - 1; left > 0; ) {
       let g = left >= 3 && r() < 0.45 ? 3 : 2
-      if (left - g === 1) g = left >= 3 ? 3 : left
+      if (left - g === 1) g = Math.min(left, 3)
       if (g > left) g = left
       sizes.push(g)
       left -= g

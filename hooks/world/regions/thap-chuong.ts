@@ -34,7 +34,7 @@ function mp(polys: Pt[][], z = true): string {
     const q = poly.map(([x, y]) => [n0(x), n0(y)] as Pt)
     const f = q[0]
     if (!f) continue
-    s += s ? 'm' + J([f[0] - cx, f[1] - cy]) : 'M' + J(f)
+    s += s ? `m${J([f[0] - cx, f[1] - cy])}` : `M${J(f)}`
     let [px, py] = f
     const ds: number[] = []
     for (const [x, y] of q.slice(1)) {
@@ -213,10 +213,10 @@ function shapeDefs(ctx: Ctx): string {
   const cr = ctx.rng('thap-chuong-tan-khung')
   const pd = (id: string, d: string) => `<path id="${id}" d="${d}"/>`
   return (
-    pd('tc-sp', 'M-66-403q12-4 14-17l44-130 32 130q4 13 12 17q-51 5-102 0z' + SPS) +
+    pd('tc-sp', `M-66-403q12-4 14-17l44-130 32 130q4 13 12 17q-51 5-102 0z${SPS}`) +
     pd('tc-tr', mp(stairGeo().fr)) +
     pd('tc-in', 'M-58-14v-186l256 4v182z') +
-    pd('tc-lw', rp([[-204, 2], [-204, -200], ...EDGE]) + 'M150 2v-54l6-6 8 8 8-20 10 6 10-16 12 6v76z') +
+    pd('tc-lw', `${rp([[-204, 2], [-204, -200], ...EDGE])}M150 2v-54l6-6 8 8 8-20 10 6 10-16 12 6v76z`) +
     pd('tc-cn', CL.map(([x, y, w, h]) => blobS(cr, x, y, w * 0.95, h * 0.95, 7, 0.4)).join('')) +
     MOSS.map(([id, lines]) => pd(id, mp(lines, false))).join('') +
     courtDefs(ctx)
@@ -398,7 +398,7 @@ function defs(ctx: Ctx): string {
     MKR('kg', `<use href="#tc-gp" class="g3"/>`, false) +
     MKR('kd', `<use href="#tc-gp" class="g4" transform="scale(1.4)"/>`, false) +
     MKR('kh', `<use href="#tc-gp" class="g1"/>`, false) +
-    ['1', '2', '3'].map(k => MKR('k' + k, `<use href="#tc-fw" class="f${k}"/>`, false)).join('') +
+    ['1', '2', '3'].map(k => MKR(`k${k}`, `<use href="#tc-fw" class="f${k}"/>`, false)).join('') +
     meadowTile(ctx, r) +
     ROSE +
     fernDef(r) +
@@ -447,11 +447,11 @@ function tower(ctx: Ctx, sun: Sun, snow: boolean, lite: boolean): { svg: string;
   const { a, out } = acc()
   let s = `<ellipse class="ao" cx="6" cy="2" rx="104" ry="8"/>`
   // Khối: bệ đá, thân vữa vàng, tầng đồng hồ đá, lầu chuông gạch, các gờ; vết thời gian; dựng khối sáng trái / tối phải
-  a('s3', pS + csS + 'M-50 7h76l3 6h-82z')
-  a('s2', 'M-80 2v-40l6-6h126v46z' + stageF + 'M50-404h12l-2-7-4 3-3-5-3 4z' + c1S + c2S + c3S)
+  a('s3', `${pS + csS}M-50 7h76l3 6h-82z`)
+  a('s2', `M-80 2v-40l6-6h126v46z${stageF}M50-404h12l-2-7-4 3-3-5-3 4z${c1S}${c2S}${c3S}`)
   a('w1', shaftF)
   a('w2', shS)
-  a('url(#tc-bk)', 'M-60-316v-78h96v78z' + belS + (lite ? '' : lump(r, -44, -78, 14, 20) + lump(r, 18, -170, 12, 15)))
+  a('url(#tc-bk)', `M-60-316v-78h96v78z${belS}${lite ? '' : lump(r, -44, -78, 14, 20) + lump(r, 18, -170, 12, 15)}`)
   if (!lite) a('url(#tc-gr)', shaftF + stageF)
   a('hl', 'M-60-46l3-166h17l-3 166z', 0.35)
   a('sh', 'M9-44l-2-170h29l2 170z')
@@ -461,7 +461,7 @@ function tower(ctx: Ctx, sun: Sun, snow: boolean, lite: boolean): { svg: string;
   s += out()
   if (ctx.wet > 0.15) s += P('wetsheen', shaftF)
   // Chóp nhọn ngói đồng xanh rỉ (vảy cá), mép mái võng; sườn phải sụp lộ rui
-  s += U('tc-sp', 'p2') + `<use href="#tc-sp" fill="url(#tc-sc)"/>` + P('k1', SPS, O(0.35))
+  s += `${U('tc-sp', 'p2')}<use href="#tc-sp" fill="url(#tc-sc)"/>${P('k1', SPS, O(0.35))}`
   a('hl', 'M-52-420l44-130-30 130z')
   // lỗ tối: cửa vòm, vòm lầu chuông, lỗ chóp, ô cửa mái
   a('k1', 'M-34 2v-96a22 22 0 0 1 44 0v96zM-40-322v-30a27 27 0 0 1 54 0v30zM42-326v-26q5-10 10 0v26z')
@@ -492,7 +492,7 @@ function tower(ctx: Ctx, sun: Sun, snow: boolean, lite: boolean): { svg: string;
     -265,
     `<g transform="rotate(210)">${P('k1 tc-hh', 'M-3 4L0-15l3 19z', ` style="animation-delay:${ctx.ph(43200)}"`)}</g>${P('k1 tc-mh', 'M-2 5L0-23l2 28z', ` style="animation-delay:${ctx.ph(3600)}"`)}<circle class="x1" r="3"/>`,
   )
-  s += `<g id="tc-cf" transform="translate(-13 -265)"><circle class="tc-o tc-ck" r="23"/><circle class="tc-o tc-cq" r="23"/></g>` + kim
+  s += `<g id="tc-cf" transform="translate(-13 -265)"><circle class="tc-o tc-ck" r="23"/><circle class="tc-o tc-cq" r="23"/></g>${kim}`
   // Quả chuông đồng (lắc khi gió mạnh)
   const amp = n0(clamp((ctx.cur.wind - 0.3) * 16, 0, 9))
   const bell =
@@ -501,7 +501,7 @@ function tower(ctx: Ctx, sun: Sun, snow: boolean, lite: boolean): { svg: string;
     (lite ? '' : P('k1', 'M2 1c6 1 7 7 7 12c0 10 3 15 7 19H2z', O(0.3)) + P('tc-rl', 'M8 31q3 13-2 23'))
   s += T(-13, -376, amp > 0 ? `<g class="tc-bl" style="--a:${amp};animation-delay:${ctx.ph(6.6)}">${bell}</g>` : bell)
   // Cột thu lôi + gà gió
-  s += P('tc-fn', 'M-8-548v-36') + `<circle class="x1" cx="-8" cy="-560" r="4"/>`
+  s += `${P('tc-fn', 'M-8-548v-36')}<circle class="x1" cx="-8" cy="-560" r="4"/>`
   s += `<g class="sw4">${P('k2', 'M-14-586c0-6 4-9 8-7l2-4 2 3-2 2c2 3 0 6-4 6z')}</g>`
   // Rêu: đệm trên mặt mọi gờ (mặt bên khuất nắng), chân tháp; vệt rêu chảy dưới gờ (dồn phải)
   s += mossU('tc-mT')
@@ -522,7 +522,7 @@ function tower(ctx: Ctx, sun: Sun, snow: boolean, lite: boolean): { svg: string;
   // Ban đêm: kính màu sáng ấm (đá thành bóng tối), cửa hé ánh nến, mặt đồng hồ sáng
   let g = `<circle cx="-12" cy="-160" r="40" fill="url(#gw)" opacity=".5"/><use href="#tc-rw" x="-12" y="-160" class="tc-rn"/>`
   g += P('e1', 'M-12 2v-117q16 3 20 21V2z', O(0.5))
-  g += `<circle cx="-13" cy="-265" r="56" fill="url(#gw)"/><circle class="e2" cx="-13" cy="-265" r="28" opacity=".6"/><use href="#tc-cf"/>` + kim
+  g += `<circle cx="-13" cy="-265" r="56" fill="url(#gw)"/><circle class="e2" cx="-13" cy="-265" r="28" opacity=".6"/><use href="#tc-cf"/>${kim}`
   return { svg: T(TX, TY, s, '', SKEW), glow: T(TX, TY, g, '', SKEW), shadow: T(TX, TY, cast(sun, 150, 590, 0.1, 300)) }
 }
 
@@ -562,7 +562,7 @@ function stair(ctx: Ctx, sun: Sun, snow: boolean, lite: boolean): { svg: string;
   const railD = (f: boolean) => mp(rail.filter(q => q[0] === f).map(q => q[1]), false)
   const top = 12 + steps * rise
   // Bóng, đế; bậc phía sau trụ (nhạt) + tay vịn sau; trụ giữa cắt ở chiếu nghỉ trên cùng
-  let s = cast(sun, 24, 340, 0.6, 40) + `<ellipse class="ao" cy="1" rx="50" ry="8"/><ellipse class="s2" cy="-3" rx="36" ry="7"/>`
+  let s = `${cast(sun, 24, 340, 0.6, 40)}<ellipse class="ao" cy="1" rx="50" ry="8"/><ellipse class="s2" cy="-3" rx="36" ry="7"/>`
   if (!lite) s += P('s3', mp(bk), O(0.6)) + P('tc-xr', railD(false), O(0.6))
   s += P('s3', `M-5-4V${-top - 30}h10V-4z`) + (lite ? '' : P('hl', `M-5-4V${-top - 30}h3V-4z`) + P('k1', `M2-4V${-top - 30}h3V-4z`, O(0.25)))
   // Bậc phía trước: mặt bậc nêm (s1) + cổ bậc (bản lệch xuống, s3) + rêu viền bậc; cột con + tay vịn
@@ -586,7 +586,7 @@ function stair(ctx: Ctx, sun: Sun, snow: boolean, lite: boolean): { svg: string;
   }
   grp.forEach((tp, i) => {
     const inner = (lite || i ? '' : P('s3', tp, ' transform="translate(0 5)"')) + P('s2', tp) + (snow ? P('w3', tp, ' transform="translate(0 -1)"') : '')
-    s += `<g class="bob" style="animation-delay:${ctx.ph(10.4, 'tc-st' + i)}"${i ? O(0.5) : ''}>${inner}</g>`
+    s += `<g class="bob" style="animation-delay:${ctx.ph(10.4, `tc-st${i}`)}"${i ? O(0.5) : ''}>${inner}</g>`
   })
   // khung cửa đứng giữa trời: trong cửa là một bầu trời khác (xanh huyền ảo)
   const door = P('e4', 'M-5 0v-19h10v19z', O(0.4))
@@ -597,7 +597,7 @@ function stair(ctx: Ctx, sun: Sun, snow: boolean, lite: boolean): { svg: string;
 }
 
 // ───────────────────────── Thư viện cổ bỏ ngỏ + cây mọc xuyên mái ─────────────────────────
-function library(ctx: Ctx, sun: Sun, snow: boolean, rain: boolean, lite: boolean): { svg: string; glow: string; canopy: string; shadow: string } {
+function library(ctx: Ctx, sun: Sun, snow: boolean, lite: boolean): { svg: string; glow: string; canopy: string; shadow: string } {
   const r = ctx.rng('thap-chuong-thu-vien')
   const nz = ctx.noise('thap-chuong-tuong-tv')
   const { a, out } = acc()
@@ -666,7 +666,7 @@ function library(ctx: Ctx, sun: Sun, snow: boolean, rain: boolean, lite: boolean
   if (!lite) a('tc-vs', 'M-172-132a32 32 0 0 1 64 0')
   a('s1', 'M-174-58h68v-5h-68zM-172-176h64v-13h-64zM-204-14h408v-3h-408zM-20 2h150l4 6h-158z')
   // Móng tường chạy suốt, đá vụn chỗ tường đổ, bậc lên
-  a('s2', 'M-204 2v-16h408V2z' + (lite ? '' : lump(r, 42, -16, 15, 7, 5) + lump(r, 98, -18, 13, 6, 5)))
+  a('s2', `M-204 2v-16h408V2z${lite ? '' : lump(r, 42, -16, 15, 7, 5) + lump(r, 98, -18, 13, 6, 5)}`)
   a('s3', 'M-26 8h164l4 7h-172z')
   // Mái ngói còn lại (trái), phần phải chỉ còn rui + đòn nóc gãy
   a('url(#tc-rt)', rp([[-218, -200], [-198, -264], [-40, -264], [-30, -250], [-44, -236], [-34, -222], [-46, -210], [-40, -200]]))
@@ -730,7 +730,7 @@ function courtDefs(ctx: Ctx): string {
   return `<path id="tc-co" d="${sp(pts, true)}"/><clipPath id="tc-cp"><use href="#tc-co"/></clipPath><path id="tc-ss" d="${st}"/>`
 }
 function courtyard(ctx: Ctx, snow: boolean, lite: boolean): string {
-  let s = U('tc-co', 's2') + `<g clip-path="url(#tc-cp)">${F('url(#tc-fs)', 'M-300-10h700v44h-700z')}${F('url(#tc-fs2)', 'M-300 34h700v70h-700z')}</g>`
+  let s = `${U('tc-co', 's2')}<g clip-path="url(#tc-cp)">${F('url(#tc-fs)', 'M-300-10h700v44h-700z')}${F('url(#tc-fs2)', 'M-300 34h700v70h-700z')}</g>`
   if (lite) return T(CX, CY, s + U('tc-co', 'tc-g') + U('tc-ss', 's2') + (snow ? U('tc-co', 'w3', O(0.75)) : ''))
   // Lối mòn đất từ cửa tháp xuống phía người xem; cỏ mềm lấn vào sân (không còn "thảm" elip)
   s += P('d1', rp([[-156, 70], [-132, 70], [-118, 150], [-128, 230], [-120, 300], [-214, 300], [-196, 220], [-176, 140]]), O(0.35))
@@ -740,7 +740,7 @@ function courtyard(ctx: Ctx, snow: boolean, lite: boolean): string {
   s += U('tc-ss', 'tc-mb', O(0.8)) + U('tc-ss', 's3', ' y="3"') + U('tc-ss', 's2') + U('tc-ss', 'hl', ' x="-2" y="-2"')
   // Vũng nước sau mưa phản chiếu trời
   if (ctx.wet > 0.25) {
-    s += `<g opacity="${n0(clamp(ctx.wet, 0, 1) * (4 + 6 * ctx.daylight)) / 10}">${P('a3', 'M14 50a46 6 0 1 0 92 0a46 6 0 1 0-92 0M220 44a30 4 0 1 0 60 0a30 4 0 1 0-60 0')}${P('a1', 'M24 48h50v2h-50zM230 43h36v1h-36z')}</g>` + U('tc-co', 'wetsheen')
+    s += `<g opacity="${n0(clamp(ctx.wet, 0, 1) * (4 + 6 * ctx.daylight)) / 10}">${P('a3', 'M14 50a46 6 0 1 0 92 0a46 6 0 1 0-92 0M220 44a30 4 0 1 0 60 0a30 4 0 1 0-60 0')}${P('a1', 'M24 48h50v2h-50zM230 43h36v1h-36z')}</g>${U('tc-co', 'wetsheen')}`
   }
   if (ctx.season === 'thu') s += P('tc-lt', 'M-260 20L380 40M-200 70L300 90')
   if (snow) s += U('tc-co', 'w3', O(0.75)) + U('tc-ss', 'w3', ' y="-2"')
@@ -761,12 +761,12 @@ function meadow(ctx: Ctx, x0: number, x1: number): string {
 }
 
 // ───────────────────────── Đồng hồ mặt trời (bóng kim theo giờ thật) ─────────────────────────
-function sundial(ctx: Ctx, sun: Sun, snow: boolean, lite: boolean): string {
+function sundial(sun: Sun, snow: boolean, lite: boolean): string {
   const { a, out } = acc()
   a('s3', 'M-32 2l2-8h60l2 8zM-15-52h30v-5h-30z')
   a('s2', 'M-30-6l4-4h52l4 4zM-9-10q-6-14 0-22q-7-10 0-20h18q7 10 0 20q6 8 0 22z')
   if (!lite) a('hl', 'M-9-10q-6-14 0-22q-7-10 0-20h4v42z')
-  let s = cast(sun, 30, 70, 0.6, 60) + `<ellipse class="ao" cy="2" rx="40" ry="6"/>` + out() + `<ellipse class="s3" cy="-56" rx="31" ry="9"/><ellipse class="s1" cy="-59" rx="30" ry="8"/>`
+  const s = `${cast(sun, 30, 70, 0.6, 60)}<ellipse class="ao" cy="2" rx="40" ry="6"/>${out()}<ellipse class="s3" cy="-56" rx="31" ry="9"/><ellipse class="s1" cy="-59" rx="30" ry="8"/>`
   if (!lite) a('tc-tk', 'M-23-58a23 6 0 0 0 46 0')
   if (sun.k > 0.05) {
     const L = Math.hypot(sun.dx, sun.dy) || 1
@@ -781,7 +781,7 @@ function sundial(ctx: Ctx, sun: Sun, snow: boolean, lite: boolean): string {
 
 /** Khóm dương xỉ (lớp 3 hoặc 4) đung đưa theo gió. */
 const fern = (x: number, y: number, k: number, sw: string, flip = false) =>
-  `<g class="${sw}">` + T(x, y, (k < 1.4 ? `<ellipse class="ao" cy="2" rx="${n0(40 * k)}" ry="${n0(5 * k)}"/>` : '') + `<use href="#tc-fe" transform="scale(${flip ? -k : k} ${k})"/>`) + '</g>'
+  `<g class="${sw}">${T(x, y, `${k < 1.4 ? `<ellipse class="ao" cy="2" rx="${n0(40 * k)}" ry="${n0(5 * k)}"/>` : ''}<use href="#tc-fe" transform="scale(${flip ? -k : k} ${k})"/>`)}</g>`
 
 // ───────────────────────── Tiền cảnh lớp 4 (hai góc dưới) ─────────────────────────
 function foreground(ctx: Ctx): { left: string; right: string } {
@@ -815,7 +815,6 @@ function foreground(ctx: Ctx): { left: string; right: string } {
 function build(ctx: Ctx): BuildOut {
   const lite = ctx.detail === 'lite'
   const snow = ctx.cur.precip === 'tuyet'
-  const rain = ctx.cur.precip !== 'khong' && ctx.cur.precip !== 'tuyet'
   const sun = sunOf(ctx)
   const dim = ctx.daylight < 0.97
   const pieces: Piece[] = []
@@ -825,17 +824,17 @@ function build(ctx: Ctx): BuildOut {
   if (!lite) add(12660, 14370, 4, meadow(ctx, 12660, 14370))
   add(13080, 13820, 7, courtyard(ctx, snow, lite))
   const tw = tower(ctx, sun, snow, lite)
-  const lb = library(ctx, sun, snow, rain, lite)
+  const lb = library(ctx, sun, snow, lite)
   add(13080, 13820, 6, tw.shadow + lb.shadow)
   const st = stair(ctx, sun, snow, lite)
   add(12960, 13080, 7, st.svg, st.glow)
   add(13160, 13340, 9, tw.svg, tw.glow)
   add(13680, 14110, 8, lb.svg, lb.glow)
   add(13950, 14180, 8, lb.canopy)
-  add(13530, 13620, 6, T(13575, 772, sundial(ctx, sun, snow, lite)))
+  add(13530, 13620, 6, T(13575, 772, sundial(sun, snow, lite)))
   // Bãi cỏ nhỏ giữa sân (mèo ngủ xuân/hạ): mảng cỏ mềm hoà vào nền, viền búi cỏ, vài cụm hoa
   const gr = ctx.rng('thap-chuong-bai-co')
-  let gp = `<ellipse fill="url(#tc-gl)" rx="66" ry="15"/>` + P('tc-g', mk(row(gr, -50, 50, 7, 9, 7)))
+  let gp = `<ellipse fill="url(#tc-gl)" rx="66" ry="15"/>${P('tc-g', mk(row(gr, -50, 50, 7, 9, 7)))}`
   if (ctx.season !== 'dong') gp += P(ctx.season === 'ha' ? 'tc-f2' : 'tc-f3', mk([[-32, -6], [30, -6], [43, -1], [-44, 0]]))
   add(13360, 13520, 5, T(13440, 790, gp))
   // Khóm dương xỉ giữa đồng cỏ

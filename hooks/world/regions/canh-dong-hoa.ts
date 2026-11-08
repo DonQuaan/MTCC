@@ -241,8 +241,12 @@ function build(ctx: Ctx) {
     defs += `<pattern id="cdh-pf" width="97" height="31" patternUnits="userSpaceOnUse">${P(dong ? 'w3' : FA, fa)}${P(FB2, fb)}${P('w3', hl)}</pattern>`
   }
   // ô kế thừa (href) viết thẻ đóng tường minh (bộ dò hiddenAnim của lõi không nhận <pattern …/> tự đóng)
-  ;[0.7, 1.25, 2.2].forEach((s, i) => (defs += `<pattern id="cdh-q${i}" href="#cdh-pf" x="${i * 31}" patternTransform="scale(${s})"></pattern>`))
-  ;[1, 1.6, 2.4].forEach((s, i) => (defs += `<pattern id="cdh-r${i}" href="#cdh-pg" x="${i * 41}" patternTransform="scale(${s})"></pattern>`))
+  ;[0.7, 1.25, 2.2].forEach((s, i) => {
+    defs += `<pattern id="cdh-q${i}" href="#cdh-pf" x="${i * 31}" patternTransform="scale(${s})"></pattern>`
+  })
+  ;[1, 1.6, 2.4].forEach((s, i) => {
+    defs += `<pattern id="cdh-r${i}" href="#cdh-pg" x="${i * 41}" patternTransform="scale(${s})"></pattern>`
+  })
   const lg = (id: string, y1: number, y2: number, stops: [number, string, number?][]) =>
     `<linearGradient id="cdh-${id}" gradientUnits="userSpaceOnUse" x1="0" y1="${y1}" x2="0" y2="${y2}">${stops.map(([f, c, o]) => `<stop offset="${f}" style="stop-color:var(--${c})"${o === undefined ? '' : ` stop-opacity="${o}"`}/>`).join('')}</linearGradient>`
   defs += lg('fg', 764, 1040, [[0, 'g2'], [0.3, 'g2'], [1, 'g3']])
@@ -297,7 +301,7 @@ function build(ctx: Ctx) {
     const fr = frost && i < 2
     const rim = snow || fr ? 'w3' : 'g1'
     const ro = snow ? 0.9 : fr ? 0.45 : (sunny ? [0.4, 0.35, 0.3] : [0.22, 0.2, 0.18])[i]
-    let s = (i ? `<use href="#cdh-B${i}" class="k1" opacity="${i === 2 ? 0.2 : 0.12}" y="-8"/>` : '') + `<use href="#cdh-B${i}" class="${rim}" opacity="${ro}"/><use href="#cdh-B${i}" fill="url(#cdh-G${i})" y="${snow ? 4 : 2}"/>`
+    let s = `${i ? `<use href="#cdh-B${i}" class="k1" opacity="${i === 2 ? 0.2 : 0.12}" y="-8"/>` : ''}<use href="#cdh-B${i}" class="${rim}" opacity="${ro}"/><use href="#cdh-B${i}" fill="url(#cdh-G${i})" y="${snow ? 4 : 2}"/>`
     if (!(lite && i === 0)) s += `<use href="#cdh-B${i}" fill="url(#cdh-r${i})" y="2"/>`
     if (snow) s += `<use href="#cdh-B${i}" class="w3" opacity="${[0.8, 0.78, 0.6][i]}" y="5"/>`
     else if (fr) s += `<use href="#cdh-B${i}" class="w3" opacity=".22" y="3"/>`
@@ -392,7 +396,7 @@ function build(ctx: Ctx) {
   const spots: Spot[] = []
 
   // ── 0 NỀN ──
-  W(0, `<use href="#cdh-fd" fill="url(#cdh-fg)"/>` + (snow ? `<use href="#cdh-fd" class="w3" opacity=".6"/>` : ''))
+  W(0, `<use href="#cdh-fd" fill="url(#cdh-fg)"/>${snow ? `<use href="#cdh-fd" class="w3" opacity=".6"/>` : ''}`)
 
   // ── 1 VẬT XA: gò + cối xay gió (chìm sương, viền sáng theo phía nắng) ──
   {
@@ -480,13 +484,13 @@ function build(ctx: Ctx) {
     }
     const LS = {
       dong: P('s1', 'M0-36q16-12 36-14v50h-36z') + P('w3', 'M0-14q18-4 36-2v16h-36z') + P('k2', 'M20-22l4-15 4 15zM27-19l3-10 3 10z'),
-      ha: `<circle class="e2" cx="24" cy="-118" r="4"/>` + P('e4', 'M0-34q18-12 36-10v44h-36z', ' opacity=".7"') + P('e4', 'M0-13q18-4 36-2v15h-36z'),
-      thu: `<circle class="e2" cx="22" cy="-40" r="8"/>` + P('e1', 'M0-30q18-10 36-8v38h-36z', ' opacity=".85"') + P('x1', 'M0-12q18-4 36-2v14h-36z'),
+      ha: `<circle class="e2" cx="24" cy="-118" r="4"/>${P('e4', 'M0-34q18-12 36-10v44h-36z', ' opacity=".7"')}${P('e4', 'M0-13q18-4 36-2v15h-36z')}`,
+      thu: `<circle class="e2" cx="22" cy="-40" r="8"/>${P('e1', 'M0-30q18-10 36-8v38h-36z', ' opacity=".85"')}${P('x1', 'M0-12q18-4 36-2v14h-36z')}`,
       xuan: P('e4', 'M0-34q18-12 36-10v44h-36z', ' opacity=".6"') + P('e4', 'M0-13q18-4 36-2v15h-36z') + P('p1', 'M14-31a4 3 0 1 0 .1 0zM27-27a3 2 0 1 0 .1 0z', ' opacity=".7"'),
     }[O]
     if (O === 'dong') defs += `<path id="cdh-lt" class="e2" d="M8-134h2v2h-2zM28-112h1.6v1.6h-1.6zM12-92h1.4v1.4h-1.4zM30-72h1.4v1.4h-1.4z"/>`
     defs += `<g id="cdh-ls">${LS}</g>`
-    const ls = `<use href="#cdh-ls"/>` + (O === 'dong' ? `<g class="tw"><use href="#cdh-lt"/></g>` : '')
+    const ls = `<use href="#cdh-ls"/>${O === 'dong' ? `<g class="tw"><use href="#cdh-lt"/></g>` : ''}`
     d += `<path fill="url(#cdh-gp)" d="M-36-150h72v150h-72z"/>${ls}`
     // khung gỗ mảnh: 2 trụ + lanh tô mỏng sứt; viền sáng phía nắng, bóng phía kia
     d += P('b2', 'M-42 0v-152h6v152zM36 0v-152h6v152zM-48-158l2-6h40l3 2 3-2h46l2 6z')
@@ -499,9 +503,9 @@ function build(ctx: Ctx) {
     d += P(sx > 0 ? 'hl' : 'sh', 'M-36-150l32-9v168l-32-8z')
     d += P('hl', 'M-36-124l32-6v6l-32 6zM-36-26l32 4v6l-32-4zM-34-32l28-90v8l-26 86z') + P('sh', 'M-36-118l32-6v2l-32 6zM-36-20l32 4v2l-32-4z')
     if (!lite) d += P('z2', 'M-26-153v158M-16-156v162', ' opacity=".3"')
-    d += P('b1', 'M-20-142a5 7 0 1 1-.1 0z') + P('e2', 'M-20-140a3.6 5 0 1 1-.1 0z', ' opacity=".85"') + `<circle class="x1" cx="-9" cy="-70" r="2.2"/>`
+    d += `${P('b1', 'M-20-142a5 7 0 1 1-.1 0z') + P('e2', 'M-20-140a3.6 5 0 1 1-.1 0z', ' opacity=".85"')}<circle class="x1" cx="-9" cy="-70" r="2.2"/>`
     // rêu: chân trụ, mũ rêu trên lanh tô rủ xuống
-    d += P('m2', cu(-50, 1, 16, 12) + cu(34, 1, 14, 9) + cu(4, -164, 30, 4)) + P('m1', cu(-50, -164, 40, 5) + 'M-44-160q2 10 1 15 2-7 4-15z')
+    d += P('m2', cu(-50, 1, 16, 12) + cu(34, 1, 14, 9) + cu(4, -164, 30, 4)) + P('m1', `${cu(-50, -164, 40, 5)}M-44-160q2 10 1 15 2-7 4-15z`)
     if (snow) d += P('w3', 'M-50-164q4-5 50-5t50 5q-50-3-100 0zM-54 0q54-6 108 0-54 2-108 0z')
     if (frost) d += P('w3', 'M-52-1h104l-2 2h-100z', ' opacity=".6"')
     if (!lite) {
@@ -530,7 +534,7 @@ function build(ctx: Ctx) {
       `<circle fill="url(#gw)" cx="16" cy="-70" r="60" opacity=".55"/><ellipse fill="url(#gw)" cx="30" cy="30" rx="90" ry="16" opacity=".6"/><path fill="url(#cdh-gp)" opacity=".55" d="M0-150h36v150h-36z"/>${ls}` +
       `<path fill="url(#gw)" d="M-2 0h37l70 40h-110z"/><path class="e2" d="M-20-140a3.6 5 0 1 1-.1 0z"/>` + motes
     const tf = `<g transform="translate(${DX} ${FB})scale(${DS})">`
-    put(3, DX, tf + d + fx + '</g>', tf + doorGlow + '</g>')
+    put(3, DX, `${tf + d + fx}</g>`, `${tf + doorGlow}</g>`)
     spots.push({ kind: 'butterflies', layer: 3, x: DX + 40, y: FB - 40, w: 260 })
     spots.push({ kind: 'perch', layer: 3, x: DX - 30, y: FB - 178, s: 0.6 })
   }

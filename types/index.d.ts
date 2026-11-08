@@ -46,6 +46,12 @@ declare module 'claude-code' {
       /** Phút hiện tại (epoch phút) cho thanh trạng thái; nền KHÔNG đọc giá trị này. */
       minute: number
       backdrop: Shaped<BackdropState>
+      /** Tự mở khung Thế giới nền mỗi phiên desktop khi app chưa vẽ nền sau khung chat (/giao-dien tu-mo bat|tat). */
+      autoWindow: boolean
+      /** Phiên này đã tự mở khung một lần: không mở lại khi app gắn lại hay mod tải lại. */
+      autoOpened: boolean
+      /** session.start đã nạp xong lựa chọn đã lưu; trước đó app gắn vào thì chưa tự mở (lựa chọn còn là mặc định). */
+      loaded: boolean
     }
   }
 }

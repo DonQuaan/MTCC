@@ -235,7 +235,7 @@ test('tên kế thừa của Object (constructor, toString) không lọt làm b�
 
 test('app chưa vẽ nền: lệnh nói rõ bằng tiếng Việt và mở khung Thế giới nền thay vì in lời engine', async ($, on) => {
   const opened: string[] = []
-  engineBeneath(on, {}, { refused: true, opened })
+  engineBeneath(on, { 'auto-window': false }, { refused: true, opened })
   await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
   const text = JSON.stringify(await $.command.run({ command: 'giao-dien', args: 'the-gioi' } as Parameters<typeof $.command.run>[0]))
   expect(text).toMatch(/chưa bật lớp vẽ nền/)
@@ -261,7 +261,7 @@ test('khung Thế giới nền: cùng SVG động, giữ tỉ lệ 16:10 theo b�
 
 test('nút Cửa sổ trên thanh trạng thái chỉ hiện khi app chưa vẽ nền; lệnh cua-so mở khung', async ($, on) => {
   const opened: string[] = []
-  engineBeneath(on, {}, { refused: true, opened })
+  engineBeneath(on, { 'auto-window': false }, { refused: true, opened })
   await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
   const band = await $.ui.mount(BAND)
   expect(await band.find({ type: 'Button', key: 'mo-cua-so' })).toBeTruthy()

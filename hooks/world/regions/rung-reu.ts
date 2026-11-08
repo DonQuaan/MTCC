@@ -430,7 +430,7 @@ function build(ctx: Ctx): BuildOut {
   const frost = dong && (hr < 9.5 || hr > 18)
   const mistK = clamp(0.5 + W.fog * 0.45 + (xuan ? 0.16 : 0) + (hr < 9 ? 0.12 : 0) + (rain ? 0.1 : 0), 0, 1)
   const gy = (x: number) => ground(x)
-  const rnd = (key: string) => ctx.rng('rr-' + key)
+  const rnd = (key: string) => ctx.rng(`rr-${key}`)
   const nz = ctx.noise('rr-n')
   const op = (o: number) => ` opacity="${f2(o)}"`
   // màu sương: mưa → xám lục lạnh (bỏ ánh hồng của haze chiều); nền rêu theo mùa (thu vàng rơm/nâu ấm, đông xám bạc)
@@ -451,7 +451,7 @@ function build(ctx: Ctx): BuildOut {
     anim += 1
     kf.add(k)
     const c = `rr-a${anim}`
-    cssX.push(`.${c}{animation:rr-${k} ${rule};animation-delay:${ctx.ph(period, 'rr-' + key)}}`)
+    cssX.push(`.${c}{animation:rr-${k} ${rule};animation-delay:${ctx.ph(period, `rr-${key}`)}}`)
     return c
   }
   const mv = (key: string, fx: number, fy: number, d: number) => {
@@ -713,8 +713,8 @@ function build(ctx: Ctx): BuildOut {
   //       vệt nước từ chạc, viền sáng phía nắng, hốc cây ──
   type Tr = { hw: (y: number) => number; xl: (y: number) => number; xr: (y: number) => number; g: number }
   const trunk = (k: string, cx: number, hw0: number, fl: number, z: number, hole: boolean, lo = lite): Tr => {
-    const n = ctx.noise('rr-t' + k)
-    const r = rnd('t' + k)
+    const n = ctx.noise(`rr-t${k}`)
+    const r = rnd(`t${k}`)
     const g = gy(cx)
     const hw = (y: number) => hw0 * (1 + (0.1 * (y - 300)) / 400) + fl * smooth(540, g + 12, y) ** 2
     const xl = (y: number) => cx - hw(y) + n(y / 150, 1.3) * 24 + n(y / 40, 3.1) * 6
@@ -1094,7 +1094,7 @@ function build(ctx: Ctx): BuildOut {
   if (thu)
     for (let i = 0; i < (rain || lite ? 1 : 2) && can(); i += 1) {
       const d = 14 + i * 4
-      const c = ani('lf', `${d}s linear infinite`, d, 'lf' + i)
+      const c = ani('lf', `${d}s linear infinite`, d, `lf${i}`)
       cssX.push(`.${c}{--fx:${70 + i * 40}px;--fy:${520 - i * 40}px}`)
       // lá nhỏ, có vệt nhoè chuyển động (bản mờ lệch ngược hướng rơi) thay vì hình lá rõ nét; rơi ở hai mép khung
       const x = i ? 12150 : 11170
@@ -1103,7 +1103,7 @@ function build(ctx: Ctx): BuildOut {
     }
   if (rain) {
     let s = ''
-    for (let i = 0; i < 2 && can(); i += 1) s += `<g class="${mv('dr' + i, 0, 380, 1.7 + i * 0.6)}"><path class="rr-wf" d="M${11250 + i * 900} ${360 - i * 100}v10"/></g>`
+    for (let i = 0; i < 2 && can(); i += 1) s += `<g class="${mv(`dr${i}`, 0, 380, 1.7 + i * 0.6)}"><path class="rr-wf" d="M${11250 + i * 900} ${360 - i * 100}v10"/></g>`
     add(24, 11240, 12160, 3, s)
   }
   if (glowOn && day < 0.35 && !lite && can()) {
@@ -1120,7 +1120,11 @@ function build(ctx: Ctx): BuildOut {
       [1525, 1020, -2.6, 16],
     ] as [number, number, number, number][]) {
       const x = f4(sx)
-      const swc = sx < 100 && can() ? (anim++, ' class="sw4"') : ''
+      let swc = ''
+      if (sx < 100 && can()) {
+        anim++
+        swc = ' class="sw4"'
+      }
       add(30, x - 140 * Math.abs(s), x + 140 * Math.abs(s), 5, `<g transform="${mx(x, y, s, Math.abs(s), deg)}"><g${swc}><use href="#rr-fd" class="rr-fk"/></g></g>`, '', 4)
     }
   }

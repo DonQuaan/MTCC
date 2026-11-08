@@ -174,7 +174,7 @@ function loop(pts: Pt[]): string {
     d += `q${p[0] - cx} ${p[1] - cy} ${m[0] - cx} ${m[1] - cy}`
     ;[cx, cy] = m
   }
-  return P(d + 'z')
+  return P(`${d}z`)
 }
 
 /** Keyframes độ mờ theo các đoạn thời tiết (chuyển 50 s quanh mỗi ranh giới). Trả thuộc tính để gắn vào <g>. */
@@ -295,7 +295,7 @@ function outline(cs: C3[], clampY: number, r?: () => number): string {
     const f = ss[0] as S
     const l = ss[ss.length - 1] as S
     if (ss.length < 2) continue
-    d += `M${n0(f.x)} ${n0(f.b)}` + (n0(f.b) !== n0(f.t) ? `L${n0(f.x)} ${n0(f.t)}` : '')
+    d += `M${n0(f.x)} ${n0(f.b)}${n0(f.b) !== n0(f.t) ? `L${n0(f.x)} ${n0(f.t)}` : ''}`
     for (let i = 0; i < ss.length; i += 1) {
       const s = ss[i] as S
       if (ss[i + 1]?.ti !== s.ti) d += `A${E(s.ti)} 0 1 ${n0(s.x)} ${n0(s.t)}`
@@ -536,7 +536,7 @@ export const sky: SkyModule = {
     tones = [mix(tones[0] as string, look.sky[1], 0.24), mix(tones[1] as string, look.sky[2], 0.08), tones[2] as string, tones[3] as string]
     // xám theo độ phủ / mưa
     const greyK =
-      [0, 0, 0.1, 0.32, 0.55][lvl]! + (ctx.cur.precip === 'mua-to' ? 0.4 : ctx.cur.precip === 'mua' ? 0.25 : ctx.cur.precip === 'phun' ? 0.15 : 0)
+      ([0, 0, 0.1, 0.32, 0.55][lvl] as number) + (ctx.cur.precip === 'mua-to' ? 0.4 : ctx.cur.precip === 'mua' ? 0.25 : ctx.cur.precip === 'phun' ? 0.15 : 0)
     const nightGrey = ctx.cur.precip === 'tuyet' ? ['#2a2a3c', '#4a4862', '#585670', '#585670'] : ['#161a28', '#30364e', '#3c4460', '#3c4460']
     const grey = mix4(nightGrey, ['#7b8494', '#c3c8d0', '#dde0e5', '#e6e8eb'], dl)
     tones = mix4(tones, grey, clamp(greyK, 0, 0.85))
@@ -786,7 +786,7 @@ export const sky: SkyModule = {
         twk.forEach((b, k) => {
           if (!b.length) return
           const per = 4.3 + k * 1.7
-          st += `<path class="skT" stroke-width="2.4" style="animation-duration:${per.toFixed(1)}s;animation-delay:${ctx.ph(per * 2, 'sky-tw' + k)}" d="${dots(b)}"/>`
+          st += `<path class="skT" stroke-width="2.4" style="animation-duration:${per.toFixed(1)}s;animation-delay:${ctx.ph(per * 2, `sky-tw${k}`)}" d="${dots(b)}"/>`
         })
         for (let c = 0; c < 5; c += 1) {
           const a = named[c] as Pt[]
@@ -1066,7 +1066,7 @@ export const sky: SkyModule = {
         s += `<path id="${pid}" d="${outline(row.cs, row.yb)}"/>`
         if (o.lit !== false) s += `<use href="#${pid}" fill="url(#skLt)"/>`
       })
-      return s + '</g>'
+      return `${s}</g>`
     }
     if (hasCloud) {
       const far = (c: string, k: number) => mix(c, look.haze, k)
@@ -1220,9 +1220,9 @@ export const sky: SkyModule = {
         pts.push([-1500, y0 + amp * nb(-1500, k)])
         return smoothPath(pts).replace('M', 'L')
       }
-      const cover = rel(`M-1500 -400H2600` + edgeOf(by, 34, 0.3) + 'Z')
+      const cover = rel(`M-1500 -400H2600${edgeOf(by, 34, 0.3)}Z`)
       const by2 = by - 92
-      const rolls = rel(`M-1500 ${by2 - 150}H2600` + edgeOf(by2, 30, 3.4) + 'Z')
+      const rolls = rel(`M-1500 ${by2 - 150}H2600${edgeOf(by2, 30, 3.4)}Z`)
       const snow = ctx.weather.some(w => w.precip === 'tuyet')
       // tông riêng của tấm mây: mưa → chân mây sẫm nặng hơn hẳn trời (đủ "sức nặng" làm nguồn mưa); tuyết đêm → tấm mây
       // sáng hơn trời đêm quang (hắt ánh tuyết), hơi ấm.
@@ -1332,7 +1332,7 @@ export const sky: SkyModule = {
       ]
       // mỗi tầng mây hiện theo MẢNG của mức mây (không cộng dồn: trời nhiều mây thì các cụm nhỏ tan vào bè)
       const show: number[][] = [[0, 1, 1, 0, 0], [0, 0, 1, 0, 0], [0, 0, 0, 1, 0]]
-      const tierOn = (t: number) => ctx.weather.some(w => (show[t - 1]![LV[w.cloud]] as number) > 0)
+      const tierOn = (t: number) => ctx.weather.some(w => ((show[t - 1] as number[])[LV[w.cloud]] as number) > 0)
       for (const [tier, depth, count, y0, y1, s0, s1, kx, ky, nmMax, h0, h1, op] of PLAN) {
         if (depth === 2) continue
         const fam = depth === 0 ? strips : cums
@@ -1490,7 +1490,7 @@ export const sky: SkyModule = {
       }
       for (const d of made.values()) defs.push(d)
       if (tower) defs.push(tower.def)
-      const att = [1, 2, 3].map(t => fader(`skF${t}`, ctx.weather.map(w => show[t - 1]![LV[w.cloud]] as number), ctx.weather, span, css))
+      const att = [1, 2, 3].map(t => fader(`skF${t}`, ctx.weather.map(w => (show[t - 1] as number[])[LV[w.cloud]] as number), ctx.weather, span, css))
       if (nearCss.length) css.push(`.skGf{animation:skGf ${span}s linear forwards;animation-delay:calc(var(--t)*-1s)}`, ...nearCss)
       // tầng gần lên MÀN HÌNH (sau mặt trời/trăng → mây che được đĩa), mờ theo tầng mây như các tầng khác
       let nearG = ''

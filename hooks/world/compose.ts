@@ -3,7 +3,7 @@
 import { camAt, camPlan, camSamples, type Cam } from './camera'
 import { LOOP_CLASSES, paletteCss, timeLook } from './palette'
 import { daylightOf, moonPhase, season as seasonOf, sunAltitude, tietKhi, vnTime } from './time'
-import { CY0, LAYER_F, VH, VW, WORLD_W, clamp, ground, makeNoise, mix, n0, rng, smoothPath, type Pt } from './util'
+import { CY0, LAYER_F, VH, VW, clamp, ground, makeNoise, mix, rng, smoothPath, type Pt } from './util'
 import { weatherTimeline, type WeatherOverride } from './weather-model'
 import type { ActorsModule, Ctx, Detail, Layer, MidModule, Piece, Region, Season, Shot, SkyModule, Spot, WeatherModule } from './types'
 
@@ -90,7 +90,7 @@ function groundPiece(xa: number, xb: number): Piece {
   const b = Math.ceil(xb / 51) * 51
   const top: Pt[] = []
   for (let x = a; x <= b; x += 51) top.push([x, ground(x)])
-  const band = (dy: number) => smoothPath(top.map(([x, y]) => [x, y + dy] as Pt)) + `L${b} 1500L${a} 1500Z`
+  const band = (dy: number) => `${smoothPath(top.map(([x, y]) => [x, y + dy] as Pt))}L${b} 1500L${a} 1500Z`
   return {
     layer: 3,
     x0: a,
@@ -111,8 +111,7 @@ export function splitDefs(defs: string): DefEl[] {
   const tag = /<(\/?)([A-Za-z][\w:.-]*)\b[^>]*?(\/?)>/g
   let depth = 0
   let start = 0
-  let m: RegExpExecArray | null
-  while ((m = tag.exec(defs))) {
+  for (let m = tag.exec(defs); m; m = tag.exec(defs)) {
     const closing = m[1] === '/'
     const selfClose = m[3] === '/'
     if (depth === 0 && !closing) start = m.index
@@ -189,8 +188,7 @@ function subtree(svg: string, start: number): string {
   const tag = /<(\/?)([A-Za-z][\w:.-]*)\b[^>]*?(\/?)>/g
   tag.lastIndex = start
   let depth = 0
-  let m: RegExpExecArray | null
-  while ((m = tag.exec(svg))) {
+  for (let m = tag.exec(svg); m; m = tag.exec(svg)) {
     if (m[1] === '/') depth -= 1
     else if (m[3] !== '/') depth += 1
     if (depth <= 0) return svg.slice(start, tag.lastIndex)
@@ -347,12 +345,22 @@ export function compose(mods: Modules, opts: ComposeOpts): { svg: string; stats:
   const vis = new Set(cands.filter(p => visible(p.layer, p.x0, p.x1)))
   for (let grew = true; grew; ) {
     grew = false
-    for (const p of [...vis]) for (const q of needs.get(p) ?? []) if (!vis.has(q)) (vis.add(q), (grew = true))
+    for (const p of [...vis])
+      for (const q of needs.get(p) ?? [])
+        if (!vis.has(q)) {
+          vis.add(q)
+          grew = true
+        }
   }
   // (2) Giá trị của mảnh định nghĩa ≥ giá trị mảnh dùng nó (+ε): vòng ngân sách luôn bỏ mảnh dùng TRƯỚC mảnh định nghĩa.
   for (let pass = 0, ch = true; ch && pass < 8; pass += 1) {
     ch = false
-    for (const [p, ds] of needs) for (const q of ds) if (q.value < p.value + 1e-9) (q.value = p.value + 1e-9, (ch = true))
+    for (const [p, ds] of needs)
+      for (const q of ds)
+        if (q.value < p.value + 1e-9) {
+          q.value = p.value + 1e-9
+          ch = true
+        }
   }
   let kept: Cand[] = cands.filter(p => vis.has(p))
   let dropped = pieces.length - kept.length
@@ -461,10 +469,10 @@ export function compose(mods: Modules, opts: ComposeOpts): { svg: string; stats:
   const gA = lookA.shadeO
   const gB = lookB.shadeO
   const gradeOn = Math.max(gA, gB) >= 0.03
-  const gradeCss = !gradeOn ? '' : `.grade{mix-blend-mode:multiply}` + fade('gA', gA, gB)
+  const gradeCss = !gradeOn ? '' : `.grade{mix-blend-mode:multiply}${fade('gA', gA, gB)}`
   const gradeSvg = !gradeOn ? '' : `<rect class="grade gA" fill="${mix(lookA.shade, lookB.shade, 0.5)}" width="${VW}" height="${VH}"/>`
   const desatOn = Math.max(lookA.desat, lookB.desat) >= 0.03
-  const toneCss = fade('fgs', lookA.fgO, lookB.fgO) + (desatOn ? `.nds{mix-blend-mode:saturation}` + fade('nds', lookA.desat, lookB.desat) : '')
+  const toneCss = fade('fgs', lookA.fgO, lookB.fgO) + (desatOn ? `.nds{mix-blend-mode:saturation}${fade('nds', lookA.desat, lookB.desat)}` : '')
   const loops = LOOP_CLASSES.map(([cls, period]) => `.${cls}{animation-delay:calc(-${(nowSec % period).toFixed(2)}s - var(--t)*1s)}`).join('')
   const head =
     `svg{--t:0}` +
@@ -499,7 +507,11 @@ export function compose(mods: Modules, opts: ComposeOpts): { svg: string; stats:
       // (3) Chốt cuối: bỏ luôn mảnh nào còn dùng id của mảnh vừa bỏ (bắc cầu), để không bao giờ có tham chiếu treo.
       for (let grew = true; grew; ) {
         grew = false
-        for (const p of kept) if (!drop.has(p) && (needs.get(p) ?? []).some(q => drop.has(q))) (drop.add(p), (grew = true))
+        for (const p of kept)
+          if (!drop.has(p) && (needs.get(p) ?? []).some(q => drop.has(q))) {
+            drop.add(p)
+            grew = true
+          }
       }
       kept = kept.filter(p => !drop.has(p))
       dropped += drop.size

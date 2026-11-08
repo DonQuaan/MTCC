@@ -30,7 +30,7 @@ const J = (a: number[]) => {
   let s = ''
   for (const v of a) {
     const t = nm(v)
-    s += s && t[0] !== '-' ? ' ' + t : t
+    s += s && t[0] !== '-' ? ` ${t}` : t
   }
   return s
 }
@@ -118,7 +118,7 @@ function leaves(list: [number, number, number, number, number][]): string {
     const ny = Math.cos(a) * w
     const c1 = [R((Math.cos(a) * len) / 2 + nx), R((Math.sin(a) * len) / 2 + ny)]
     const c2 = [R((Math.cos(a) * len) / 2 - nx) - ex, R((Math.sin(a) * len) / 2 - ny) - ey]
-    d += (d ? `m${J([X - px, Y - py])}` : `M${J([X, Y])}`) + `q${J([c1[0] as number, c1[1] as number, ex, ey])}q${J([c2[0] as number, c2[1] as number, -ex, -ey])}z`
+    d += `${d ? `m${J([X - px, Y - py])}` : `M${J([X, Y])}`}q${J([c1[0] as number, c1[1] as number, ex, ey])}q${J([c2[0] as number, c2[1] as number, -ex, -ey])}z`
     px = X
     py = Y
   }
@@ -297,7 +297,6 @@ function buildAt(ctx: Ctx, trim: number): BuildOut {
   const day = ctx.daylight
   const night = day < 0.6
   const dark = day < 0.4
-  const rain = W.precip === 'mua' || W.precip === 'mua-to' || W.precip === 'phun'
   const snow = W.precip === 'tuyet'
   const sunny = day > 0.55 && (W.cloud === 'quang' || W.cloud === 'it' || W.cloud === 'vua') && W.precip === 'khong'
   const tet = S === 'dong' && ctx.seasonT > 0.78
@@ -371,7 +370,7 @@ function buildAt(ctx: Ctx, trim: number): BuildOut {
     const line: P[] = []
     for (let x = 3600; x <= 4680; x += 70) line.push([x, ybot(x)])
     line.push([4700, -300])
-    let d = `M3600 318${ragEdge(line, er, lite ? [170, 260] : [110, 230], [14, 34], lite ? 5 : 7)}L4700-330L3600-330z`
+    const d = `M3600 318${ragEdge(line, er, lite ? [170, 260] : [110, 230], [14, 34], lite ? 5 : 7)}L4700-330L3600-330z`
     defs += `<path id="cd-sil" fill-rule="evenodd" clip-rule="evenodd" d="${d}"/><clipPath id="cd-cp"><use href="#cd-sil"/></clipPath>`
   }
   // Rèm rễ phụ: 3 dáng, mỗi dáng 4–6 sợi bện, dày 0,6–2 (sợi già dày, sợi non mảnh), dài chênh tới 3 lần.
@@ -420,7 +419,6 @@ function buildAt(ctx: Ctx, trim: number): BuildOut {
     css += `.${c}{animation:${name} ${+dur.toFixed(1)}s ease-in-out infinite alternate;animation-delay:${ctx.ph(dur * 2, c)}}`
     return c
   }
-  const tr = (x: number, y: number, k: number) => `translate(${R(x)} ${R(y)})scale(${f2(k)})`
 
   // ═════ A. Mặt đất: gò, bóng tán mềm, vòng đất trơ, lối đất nhạt xuống phải, bãi mèo, thảm lá / tuyết ═════
   {
@@ -507,7 +505,7 @@ function buildAt(ctx: Ctx, trim: number): BuildOut {
         return [x + (q[0] - x) * 0.35, y + (q[1] - y) * 0.35] as P
       })
       moss += pl([...tp.map(([x, y], i) => [x, y + (i % 2 ? 2 : -1)] as P), ...inn.reverse()])
-      if (snow) snowTop += so(tp.map(([x, y]) => [x, y - 2] as P)) + 'l0 5' + so([...tp].reverse().map(([x, y]) => [x, y + 3] as P)).replace(/^M[^q]*/, '') + 'z'
+      if (snow) snowTop += `${so(tp.map(([x, y]) => [x, y - 2] as P))}l0 5${so([...tp].reverse().map(([x, y]) => [x, y + 3] as P)).replace(/^M[^q]*/, '')}z`
     }
     s += `<path class="m2" opacity=".85" d="${moss}"/>`
     if (snowTop) s += `<path class="w3" d="${snowTop}"/>`
@@ -552,10 +550,10 @@ function buildAt(ctx: Ctx, trim: number): BuildOut {
     for (const k of rows) {
       let x = 3600 + cr() * 40
       while (x < 4780) {
-        const rx = (lite ? 150 : [150, 110, 80][k]!) + cr() * [120, 90, 70][k]!
-        const ry = [70, 58, 46][k]! + cr() * 28
+        const rx = (lite ? 150 : ([150, 110, 80][k] as number)) + cr() * ([120, 90, 70][k] as number)
+        const ry = ([70, 58, 46][k] as number) + cr() * 28
         const cx = x + rx * 0.7
-        const cy = ybot(Math.min(cx, 4730)) - lift[k]! + (cr() - 0.5) * 36
+        const cy = ybot(Math.min(cx, 4730)) - (lift[k] as number) + (cr() - 0.5) * 36
         x += rx * (1.12 + cr() * 0.4)
         if (cy + ry < -150) continue
         // đông: tán thưa hẳn — bỏ nhiều cụm, cụm nhỏ lại, lộ khung cành
@@ -646,7 +644,7 @@ function buildAt(ctx: Ctx, trim: number): BuildOut {
       s += `<path fill="url(#cd-k)" d="${b.d}"/>`
       // thớ vỏ: 1 nét dọc mảnh theo thớ xoắn trong mỗi múi (tương phản thấp)
       // vân vỏ XOẮN theo múi, đứt quãng (2 đoạn lệch nhau), không sọc đều
-      const at = (f: number, j0: number, j1: number) => so(b.A.slice(j0, j1).map(([x, y], j) => [x + (b.B[j + j0]![0] - x) * f, y] as P))
+      const at = (f: number, j0: number, j1: number) => so(b.A.slice(j0, j1).map(([x, y], j) => [x + ((b.B[j + j0] as P)[0] - x) * f, y] as P))
       if (!lite) fis += at(0.3 + 0.12 * (k % 2), 0, 4)
       if (!lite && trim < 2) fis += at(0.66 - 0.1 * (k % 3), 2, 6)
       if (!lite && (sx < 0 ? k <= 2 : k >= 3)) fil += at(sx < 0 ? 0.16 : 0.84, 1, 5)
@@ -778,7 +776,7 @@ function buildAt(ctx: Ctx, trim: number): BuildOut {
         const [x, y, v, k] = CUR[i] as [number, number, number, number]
         inner += `<use href="#cd-r${v}" class="b2" transform="translate(${R(x)} ${R(y)})scale(1 ${f2(k * (dong ? 0.85 : 1))})"/>`
       }
-      s += `<g class="cd-hg ${anim('cd-hg', 5.1 + gi[0]! * 0.7)}">${inner}</g>`
+      s += `<g class="cd-hg ${anim('cd-hg', 5.1 + (gi[0] as number) * 0.7)}">${inner}</g>`
     }
     // rễ non dài: một bên trái, một mảnh nhạt bên phải
     for (const [x, op] of lite ? [] : ([[3842, 1]] as const)) {

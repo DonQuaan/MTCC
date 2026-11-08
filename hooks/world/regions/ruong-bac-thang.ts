@@ -177,7 +177,7 @@ function build(ctx: Ctx): BuildOut {
     }
     const th = (x: number) => bot(x) - top(x)
     const rc = ctx.rng(`rb-cut${j}`)
-    let cuts: number[] = []
+    const cuts: number[] = []
     let x = L
     for (;;) {
       let c = x + (lite ? 520 : 400) + rc() ** 1.3 * (lite ? 560 : 500)
@@ -215,7 +215,7 @@ function build(ctx: Ctx): BuildOut {
         const hh = n0(bot(b)) - n0(top(b))
         d += `c${n0(1.1 * hh + 6)} ${n0(0.2 * hh)} ${n0(0.3 * hh)} ${hh} 0 ${hh}`
       } else d += `l${bb - b} ${n0(bot(bb)) - n0(top(b))}`
-      d += segs(bot, last ? b : bb, first ? a : ab, n) + 'z'
+      d += `${segs(bot, last ? b : bb, first ? a : ab, n)}z`
       const r = rk()
       const k: Kind = kindOf(ctx, r, j)
       // thửa luôn nằm dưới mép khung (mọi khung cảnh/chuyển cảnh: y > 1112) thì bỏ
@@ -226,7 +226,7 @@ function build(ctx: Ctx): BuildOut {
     // bờ dừng trước mũi thửa (bờ dày bo tròn ở đầu hàng trông như viên thuốc)
     const e0 = -n0(60 + (LGW[LG(j)] as number) * 2)
     const e1 = e0
-    lips[LG(j)] += `M${L - e0} ${n0(bot(L - e0))}` + segs(bot, L - e0, R + e1, Math.max(1, Math.ceil((R - L) / (lite ? 600 : 380))))
+    lips[LG(j)] += `M${L - e0} ${n0(bot(L - e0))}${segs(bot, L - e0, R + e1, Math.max(1, Math.ceil((R - L) / (lite ? 600 : 380))))}`
     ends.push([L, n0(lerp(top(L), bot(L), 0.6)), j, -1], [R, n0(lerp(top(R), bot(R), 0.6)), j, 1])
   }
   const used = new Set<string>()
@@ -264,7 +264,7 @@ function build(ctx: Ctx): BuildOut {
       x0: 6760,
       x1: 7420,
       prio: 5,
-      svg: `<ellipse fill="url(#rb-mg)" opacity="${night ? '.08' : '.2'}" cx="6950" cy="672" rx="230" ry="50"/><ellipse fill="url(#rb-cg)" cx="6990" cy="790" rx="190" ry="70"/><ellipse fill="url(#rb-cg)" cx="7190" cy="990" rx="270" ry="190"/>` + (gt ? `<path class="rb-gt" d="${gt}"/>` : ''),
+      svg: `<ellipse fill="url(#rb-mg)" opacity="${night ? '.08' : '.2'}" cx="6950" cy="672" rx="230" ry="50"/><ellipse fill="url(#rb-cg)" cx="6990" cy="790" rx="190" ry="70"/><ellipse fill="url(#rb-cg)" cx="7190" cy="990" rx="270" ry="190"/>${gt ? `<path class="rb-gt" d="${gt}"/>` : ''}`,
     })
   }
 
@@ -338,7 +338,7 @@ function build(ctx: Ctx): BuildOut {
       const [ty, tw] = TB[gI] as number[]
       const [ly, lw] = LB[gI] as number[]
       const [by, bw] = BB[gI] as number[]
-      s += `<use href="#rb-L${gI}" class="rb-b1" stroke-width="${tw}" y="${ty}"/>` + (gI && !lite ? `<use href="#rb-L${gI}" class="rb-b2" stroke-width="${lw}" y="${ly}"/>` : '') + (gI ? `<use href="#rb-L${gI}" class="rb-b3" stroke-width="${bw}" y="${by}"/>` : '')
+      s += `<use href="#rb-L${gI}" class="rb-b1" stroke-width="${tw}" y="${ty}"/>${gI && !lite ? `<use href="#rb-L${gI}" class="rb-b2" stroke-width="${lw}" y="${ly}"/>` : ''}${gI ? `<use href="#rb-L${gI}" class="rb-b3" stroke-width="${bw}" y="${by}"/>` : ''}`
     }
     s += '</g>'
     if (night) s += `<rect class="k1" opacity=".12" x="5300" y="560" width="2100" height="760"/>`
@@ -913,7 +913,7 @@ function defs(ctx: Ctx, used: Set<string>, lips: string[], L: Look): string {
         if (used.has(K + t)) {
           const v = vi ? `<use href="#${vi}"/>` : p[3].replace('<path', `<path id="rb-v${K}"`)
           vi = `rb-v${K}`
-          d += pat(t, `<rect class="rb-c${t}" width="${p[0]}" height="${p[1]}"/>` + (L.lite && K === 'W' ? '' : `<g opacity="${t ? (L.night ? '.35' : t < 2 && K === 'S' ? '.7' : '1') : '.4'}">${v}</g>`))
+          d += pat(t, `<rect class="rb-c${t}" width="${p[0]}" height="${p[1]}"/>${L.lite && K === 'W' ? '' : `<g opacity="${t ? (L.night ? '.35' : t < 2 && K === 'S' ? '.7' : '1') : '.4'}">${v}</g>`}`)
         }
       continue
     }

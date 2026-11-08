@@ -42,9 +42,12 @@ const detailAtom = atom({ plugin: 'giao-dien-dep', key: 'detail' } as const, 'fu
 const winAtom = atom({ plugin: 'giao-dien-dep', key: 'win' } as const, 0)
 const minuteAtom = atom({ plugin: 'giao-dien-dep', key: 'minute' } as const, 0)
 const backdropAtom = atom({ plugin: 'giao-dien-dep', key: 'backdrop' } as const, { isDrawn: true, reason: '', hasDesktop: false }, { shape: 'backdrop-2' })
+const autoWindowAtom = atom({ plugin: 'giao-dien-dep', key: 'autoWindow' } as const, true)
+const autoOpenedAtom = atom({ plugin: 'giao-dien-dep', key: 'autoOpened' } as const, false)
+const loadedAtom = atom({ plugin: 'giao-dien-dep', key: 'loaded' } as const, false)
 
 // Khoá lưu qua các phiên. Bản v0.2 lưu "theme" là một bản in; khoá mới để lần đầu ai cũng thấy thế giới nền.
-const STORE = { theme: 'theme-v3', glass: 'glass', band: 'band', view: 'world-view', detail: 'world-detail' } as const
+const STORE = { theme: 'theme-v3', glass: 'glass', band: 'band', view: 'world-view', detail: 'world-detail', autoWindow: 'auto-window' } as const
 
 const GLASS: Record<GlassLevel, { label: string; blur: number; opacity: number }> = {
   trong: { label: 'Trong', blur: 10, opacity: 0.55 },
@@ -59,7 +62,7 @@ const MUTED = oklch(0.62, 0.012, 80)
 const MOSS = oklch(0.62, 0.11, 140)
 
 // `in` cũng nhận khoá kế thừa của Object ('constructor', 'toString'…) → giá trị lạ trong store/lệnh lọt qua rồi vỡ khi tra bảng.
-const own = (table: object, key: string) => Object.prototype.hasOwnProperty.call(table, key)
+const own = (table: object, key: string) => Object.hasOwn(table, key)
 
 function isThemeId(value: unknown): value is ThemeId {
   return value === 'tat' || value === 'the-gioi' || (typeof value === 'string' && own(PLATES, value))
@@ -173,6 +176,18 @@ async function openWindow($: Engine): Promise<boolean> {
   return opened.isPlaced
 }
 
+/** Mỗi phiên desktop tự mở khung xem cảnh MỘT lần khi app chưa vẽ nền sau khung chat, để cảnh hiện mà người dùng
+ *  không phải gõ lệnh. Không mở khi: nền đã vẽ (hình nền tắt cũng báo isDrawn), chưa có app desktop, người dùng tắt tự
+ *  mở, hay phiên này đã mở. */
+async function autoWindow($: Engine, state: BackdropState): Promise<void> {
+  if (state.isDrawn || !state.hasDesktop) return
+  if (!(await read($, autoWindowAtom)) || (await read($, autoOpenedAtom))) return
+  // Đánh dấu TRƯỚC khi mở để lần gọi đến sau (app gắn thêm khi khung còn đang mở dở) thấy dấu và thôi. Hai lần gọi
+  // thật sự đồng thời vẫn có thể cùng mở; vô hại vì ui.open cùng id chỉ đưa lại khung đó, không tạo khung thứ hai.
+  await update($, autoOpenedAtom, () => true)
+  if (!(await openWindow($))) await update($, autoOpenedAtom, () => false)
+}
+
 async function tick($: Engine): Promise<void> {
   const now = await $.clock.now()
   await update($, liveAtom, live => ({ ...live, now }))
@@ -245,7 +260,7 @@ function labelOf<T extends string>(list: { id: T; label: string }[], id: T): str
 }
 
 const HELP =
-  'Nền: the-gioi | dia-hinh | son-mai | thien-do | giay-do | tat. Thế giới: troi <tu-nhien|nang|may-it|may-vua|may-nhieu|gio|suong|phun|mua|mua-rao|mua-to|tuyet> · mua <tu-nhien|xuan|ha|thu|dong> · gio <that|binh-minh|trua|hoang-hon|dem> · chi-tiet <day-du|nhe>. Kính: kinh trong|mo|duc. Thanh: thanh bat|tat. Khung xem cảnh: cua-so.'
+  'Nền: the-gioi | dia-hinh | son-mai | thien-do | giay-do | tat. Thế giới: troi <tu-nhien|nang|may-it|may-vua|may-nhieu|gio|suong|phun|mua|mua-rao|mua-to|tuyet> · mua <tu-nhien|xuan|ha|thu|dong> · gio <that|binh-minh|trua|hoang-hon|dem> · chi-tiet <day-du|nhe>. Kính: kinh trong|mo|duc. Thanh: thanh bat|tat. Khung xem cảnh: cua-so · tu-mo <bat|tat> (tự mở mỗi phiên).'
 
 // ───────────────────────── Mod ─────────────────────────
 export const register: Register = on => {
@@ -258,7 +273,7 @@ export const register: Register = on => {
     await $.command.register({
       name: COMMAND,
       description: 'Mở Studio giao diện, hoặc đổi nhanh: /giao-dien the-gioi | cua-so | troi mua-rao | mua thu | gio dem | tat',
-      argumentHint: '[the-gioi | bản in | tat | cua-so | troi … | mua … | gio … | chi-tiet … | kinh … | thanh …]',
+      argumentHint: '[the-gioi | bản in | tat | cua-so | tu-mo … | troi … | mua … | gio … | chi-tiet … | kinh … | thanh …]',
     })
     const savedTheme = await $.store.get(STORE.theme)
     if (isThemeId(savedTheme)) await update($, themeAtom, () => savedTheme)
@@ -271,6 +286,10 @@ export const register: Register = on => {
     if (isView(savedView)) await update($, viewAtom, () => ({ ...savedView, hour: 'that', shift: 0 }))
     const savedDetail = await $.store.get(STORE.detail)
     if (isDetail(savedDetail)) await update($, detailAtom, () => savedDetail)
+    const savedAuto = await $.store.get(STORE.autoWindow)
+    if (typeof savedAuto === 'boolean') await update($, autoWindowAtom, () => savedAuto)
+    // Từ đây lựa chọn đã là của người dùng: session.attach mới được tự mở khung (trước đó để lần cuối session.start lo).
+    await update($, loadedAtom, () => true)
     if ((await read($, metaAtom)) === null) {
       // Ngày theo giờ Việt Nam (UTC+7) như cả mod, không theo múi giờ của máy.
       const day = new Date((await $.clock.now()) + 7 * 3600_000)
@@ -286,7 +305,7 @@ export const register: Register = on => {
     // WINDOW_MS (phần dư tới SPAN bị cắt bớt vì trần ký tự), nên trễ cả 30 s là lộ mảng cắt cứng (đo: giây 150).
     world = $.clock.every(30_000, () => void worldTick($).then(() => armEdge($)))
     await armEdge($)
-    await syncBackdrop($)
+    await autoWindow($, await syncBackdrop($))
 
     return next(e)
   })
@@ -316,6 +335,16 @@ export const register: Register = on => {
       await armEdge($)
       return { text: second === 'that' ? 'Về giờ thật Việt Nam.' : `Xem lúc ${labelOf(HOUR_PICKS, second).toLowerCase()}.` }
     }
+    if (first === 'tu-mo' && (second === 'bat' || second === 'tat')) {
+      await update($, autoWindowAtom, () => second === 'bat')
+      await $.store.set(STORE.autoWindow, second === 'bat')
+      return {
+        text:
+          second === 'bat'
+            ? 'Khung xem cảnh sẽ tự mở mỗi phiên khi app chưa vẽ nền sau khung chat.'
+            : 'Không tự mở khung xem cảnh nữa (vẫn mở được bằng /giao-dien cua-so).',
+      }
+    }
     if (first === 'chi-tiet' && (second === 'day-du' || second === 'nhe')) {
       await setDetail($, second === 'nhe' ? 'lite' : 'full')
       return { text: second === 'nhe' ? 'Mức chi tiết: nhẹ (ít hạt mưa, ít hoạt ảnh).' : 'Mức chi tiết: đầy đủ.' }
@@ -336,7 +365,7 @@ export const register: Register = on => {
   // gọi lại $.ui.backdrop là đặt lại nền ("One backdrop stands, the latest set") — không được giành nền người dùng không hỏi.
   on('session.attach', async ($, e, next) => {
     const done = await next(e)
-    if (e.surface === 'desktop' && !othersStand) await syncBackdrop($)
+    if (e.surface === 'desktop' && !othersStand && (await read($, loadedAtom))) await autoWindow($, await syncBackdrop($))
     return done
   })
   on('session.detach', async ($, e, next) => {

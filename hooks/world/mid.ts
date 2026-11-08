@@ -20,7 +20,6 @@ import { clamp, fbm, lerp, mix, smooth, type Pt } from './util'
 import { paletteCss, timeLook } from './palette'
 import type { Ctx, MidModule, Piece, Spot } from './types'
 
-type Pk = { c: number; h: number; wl: number; wr: number }
 
 const R = (v: number) => Math.round(v) || 0
 const f2 = (v: number) => v.toFixed(2).replace(/^(-?)0\./, '$1.')
@@ -96,7 +95,7 @@ function rl(p: Pt[]): string {
     x = nx
     y = ny
   }
-  return `M${J([R(f[0]), R(f[1])])}` + (a.length ? 'l' + J(a) : '')
+  return `M${J([R(f[0]), R(f[1])])}${a.length ? `l${J(a)}` : ''}`
 }
 
 /** Khối kín mềm (Q qua trung điểm), toạ độ tương đối. */
@@ -140,7 +139,7 @@ function qo(p: Pt[]): string {
     cy = ey
   }
   const l = p[p.length - 1] as Pt
-  return `M${J([R(f[0]), R(f[1])])}` + (a.length ? 'q' + J(a) : '') + (p.length > 1 ? `l${J([R(l[0]) - cx, R(l[1]) - cy])}` : '')
+  return `M${J([R(f[0]), R(f[1])])}${a.length ? `q${J(a)}` : ''}${p.length > 1 ? `l${J([R(l[0]) - cx, R(l[1]) - cy])}` : ''}`
 }
 
 /** Độ dài gần đúng của qo(p). */
@@ -341,7 +340,7 @@ function when(ks: Key[], x: number): number {
 }
 const kfCss = (name: string, ks: Key[]) =>
   `@keyframes ${name}{` +
-  ks.map(k => `${((k.t / TP) * 100).toFixed(2)}%{transform:translate(${R(k.x)}px,${k.y}px)${k.tf === 'linear' ? '' : ';animation-timing-function:' + k.tf}}`).join('') +
+  ks.map(k => `${((k.t / TP) * 100).toFixed(2)}%{transform:translate(${R(k.x)}px,${k.y}px)${k.tf === 'linear' ? '' : `;animation-timing-function:${k.tf}`}}`).join('') +
   `100%{transform:translate(${R((ks[ks.length - 1] as Key).x)}px,0)}}`
 
 export const mid: MidModule = {
@@ -439,7 +438,7 @@ export const mid: MidModule = {
         [40 + jr() * 30, 300],
       ]
       symDefs +=
-        `<g id="${id}"><path id="${id}a" class="${cls}${rim ? ' ' + rim : ''}"${dash} d="${qo(top)}V300H${x0}Z"/><clipPath id="${id}k"><use href="#${id}a"/></clipPath>` +
+        `<g id="${id}"><path id="${id}a" class="${cls}${rim ? ` ${rim}` : ''}"${dash} d="${qo(top)}V300H${x0}Z"/><clipPath id="${id}k"><use href="#${id}a"/></clipPath>` +
         (lite ? '' : `<g clip-path="url(#${id}k)"><path class="mi-lf" d="${rl([[x0 - 4, -40], ...cr, [x0 - 4, 300]])}z"/><path class="mi-df" d="${rl([[x1 + 4, -40], ...cr, [x1 + 4, 300]])}z${extra}"/></g>`) +
         `</g>`
     }
@@ -489,7 +488,7 @@ export const mid: MidModule = {
         const x0 = L1X[0] + k * CH1
         const p = clipX(pts, x0, x0 + CH1 + 1)
         const dash = rimC ? ` stroke-dasharray="${R(qlen(p) - 1)} 9999"` : ''
-        add(1, x0 - 8, x0 + CH1 + 9, prio, `<path class="mi-${key}${rimC ? ' ' + rimC : ''}"${dash} d="${qo(p)}V1100H${x0}Z"/>`)
+        add(1, x0 - 8, x0 + CH1 + 9, prio, `<path class="mi-${key}${rimC ? ` ${rimC}` : ''}"${dash} d="${qo(p)}V1100H${x0}Z"/>`)
       }
       for (let k = 0; k < nC1; k += 1) {
         const x0 = L1X[0] + k * CH1
@@ -520,7 +519,7 @@ export const mid: MidModule = {
     // Tầng A: núi lớn, sườn trái thoải dài, vách phải dựng; ba dáng (thẳng / vai trái / vai phải).
     const nA = ctx.noise('mi-a')
     const RA = [0.4, 0.56, 0.74]
-    RA.forEach((ra, s) =>
+    RA.forEach((ra, s) => {
       peakSym(
         `mi-p${s}`,
         'mi-a',
@@ -533,8 +532,8 @@ export const mid: MidModule = {
         -270,
         R(270 * ra),
         '',
-      ),
-    )
+      )
+    })
     const fA1 = ntab(nA, 240, 0.37, 2, L1X[0] - 240, L1X[1] + 240)
     const ridgeA = tab((x: number) => {
       const v = 524 - 26 * (0.5 + fA1(x))
@@ -773,7 +772,7 @@ export const mid: MidModule = {
             if (pr() < 0.62) continue
             pn += pines('b', x, yH, pr)
           }
-        add(2, x0 - 8, x1 + 9, 9, `<path class="mi-h" d="${qo(clipX(th, x0, x1 + 1))}V1100H${x0}Z"/>` + pn)
+        add(2, x0 - 8, x1 + 9, 9, `<path class="mi-h" d="${qo(clipX(th, x0, x1 + 1))}V1100H${x0}Z"/>${pn}`)
       }
     }
     fog(2, 560, 0.6)
@@ -802,7 +801,7 @@ export const mid: MidModule = {
       for (let i = 1; i < NU - 1; i += 1) {
         const u = -1 + (2 * i) / (NU - 1)
         const uu = clamp(u - sk * (1 - u * u), -1, 1)
-        let k = Math.pow(Math.max(0, 1 - Math.abs(uu) ** 2.1), 0.85) * 0.72
+        let k = Math.max(0, 1 - Math.abs(uu) ** 2.1) ** 0.85 * 0.72
         k *= 0.62 + 0.8 * (fbm(tn, u * 2.3, 1.7, 2) + 0.5) + 0.18 * Math.abs(Math.sin(u * 7.3 + sk * 9))
         const chip = Math.abs(u) > 0.6 && r() < 0.5 ? r() * 5 : 0
         const q: Pt = [u * 100 * (0.97 + r() * 0.05) - Math.sign(u) * chip, 3 + 100 * k + chip * 0.6]
@@ -888,7 +887,7 @@ export const mid: MidModule = {
       const gx = 4866
       const gy = R(top(0.02) + 2)
       let s = tree(clumpId, 4740, top(-0.7) + 3, 1.25, 'sw2') + tree('mi-tb', 4962, top(0.6) + 2, 1, 'sw3')
-      s += `<use href="#mi-gate" x="${gx}" y="${gy}"/>` + tuft(4910, top(0.3) + 3) + tuft(4810, top(-0.3) + 3)
+      s += `<use href="#mi-gate" x="${gx}" y="${gy}"/>${tuft(4910, top(0.3) + 3)}${tuft(4810, top(-0.3) + 3)}`
       s += `<path class="s2" d="M4936 ${R(top(0.42) + 2)}v-7h4v7zm-2-7h8l-4-3z"/>`
       return [s, night ? lamp(gx, gy - 17) + lamp(4938, R(top(0.42) - 4)) : '']
     })
@@ -899,11 +898,11 @@ export const mid: MidModule = {
       const lx = 5432
       const ly = R(top(-0.34) - 34)
       let s = tree(clumpId, 5440, top(-0.27) + 4, 2.1, 'sw4')
-      s += `<use href="#mi-hut" x="${hx}" y="${hy}"/><path class="mi-ln" d="M${lx} ${ly - 15}v14"/>` + (night ? '' : `<circle class="p1" cx="${lx}" cy="${ly}" r="1.6"/>`)
+      s += `<use href="#mi-hut" x="${hx}" y="${hy}"/><path class="mi-ln" d="M${lx} ${ly - 15}v14"/>${night ? '' : `<circle class="p1" cx="${lx}" cy="${ly}" r="1.6"/>`}`
       const ex = R(5470 - 0.5 * 111)
       const ey = R(top(-0.5) + 5)
-      s += `<g class="mi-hg"><path class="mi-rp" d="M${ex} ${ey}v66m5-66v66"/><path class="mi-rg" d="M${ex + 2} ${ey + 4}v62"/></g>` + tuft(5530, top(0.55) + 3)
-      return [s, night ? `<use href="#mi-lw" x="${hx + 3}" y="${hy - 2}"/>` + lamp(lx, ly) : '']
+      s += `<g class="mi-hg"><path class="mi-rp" d="M${ex} ${ey}v66m5-66v66"/><path class="mi-rg" d="M${ex + 2} ${ey + 4}v62"/></g>${tuft(5530, top(0.55) + 3)}`
+      return [s, night ? `<use href="#mi-lw" x="${hx + 3}" y="${hy - 2}"/>${lamp(lx, ly)}` : '']
     })
     // Đảo 3 (nhỏ, dạt mép phải ở cảnh tháp chuông): tháp đá cổ, cột vỡ, đèn đá.
     island({ k: 'i3', b: 'mi-bA', x: 6545, y: 246, w: 170, h: 92, fu: 0.8 }, top => {
@@ -913,7 +912,7 @@ export const mid: MidModule = {
       const by = R(top(0.53) + 2)
       let s = tree('mi-tb', 6497, top(-0.56) + 2, 1, 'sw3') + tree(clumpId, 6482, top(-0.74) + 3, 0.7, 'sw2')
       s += `<use href="#mi-stp" x="${px}" y="${py}"/>`
-      s += `<path class="s1" d="M${bx - 3} ${by}v-14l2-2 2 3 2-1v14z"/><path class="sh" d="M${bx + 1} ${by}v-13l2-1v14z"/><path class="m2" d="M${bx - 4} ${by}q4-4 8 0z"/><path class="s2" d="M${bx + 14} ${by + 1}v-5h6v5zm-1-5h8l-4-3z"/>` + tuft(6470, top(-0.88) + 3)
+      s += `<path class="s1" d="M${bx - 3} ${by}v-14l2-2 2 3 2-1v14z"/><path class="sh" d="M${bx + 1} ${by}v-13l2-1v14z"/><path class="m2" d="M${bx - 4} ${by}q4-4 8 0z"/><path class="s2" d="M${bx + 14} ${by + 1}v-5h6v5zm-1-5h8l-4-3z"/>${tuft(6470, top(-0.88) + 3)}`
       return [s, night ? lamp(bx + 17, by - 3) : '']
     })
 
@@ -1091,7 +1090,7 @@ export const mid: MidModule = {
             if (pr() < 0.6) continue
             pn += pines('a', x, yF, pr)
           }
-        add(2, x0 - 12, x0 + CH2 + 12, 9, `<path class="mi-f" clip-path="url(#mi-xc)" style="stroke-dashoffset:${R(dr() * 600)}" d="${qo(clipX(tf, x0 - 20, x0 + CH2 + 20))}V1100H${x0 - 20}Z"/>` + pn)
+        add(2, x0 - 12, x0 + CH2 + 12, 9, `<path class="mi-f" clip-path="url(#mi-xc)" style="stroke-dashoffset:${R(dr() * 600)}" d="${qo(clipX(tf, x0 - 20, x0 + CH2 + 20))}V1100H${x0 - 20}Z"/>${pn}`)
       }
     }
 
@@ -1129,7 +1128,7 @@ export const mid: MidModule = {
           }
         }
         const ty = R(yF(temple) + 3)
-        s += `<use href="#mi-tpl" x="${temple}" y="${ty}"/>` + tree(clumpId, tr2, yF(tr2) + 3, 1.1, 'sw4') + tree(clumpId, tr2 + 12, yF(tr2 + 12) + 3, 0.75, 'sw2')
+        s += `<use href="#mi-tpl" x="${temple}" y="${ty}"/>${tree(clumpId, tr2, yF(tr2) + 3, 1.1, 'sw4')}${tree(clumpId, tr2 + 12, yF(tr2 + 12) + 3, 0.75, 'sw2')}`
         if (night) g += lamp(temple, ty - 3)
         add(2, Math.min(...xs, temple, tr2) - 20, Math.max(...xs, temple, tr2) + 30, 5, s, g || undefined)
         spots.push({ kind: 'smoke', layer: 2, x: (xs[1] as number) + 2, y: R(yF(xs[1] as number) - 7), s: 0.35 })
@@ -1190,7 +1189,7 @@ export const mid: MidModule = {
         const g = i % 2
         for (const off of [0, -T, T]) if (x + off + 130 > 0 && x + off - 130 < T) uses += `<use href="#mi-gv${g}" x="${x + off}" y="${y}"/>`
       }
-      return sym + `<pattern id="mi-pf" width="${T}" height="600" y="540" patternUnits="userSpaceOnUse"><rect width="${T}" height="600" fill="url(#mi-gm2)"/>${uses}</pattern>`
+      return `${sym}<pattern id="mi-pf" width="${T}" height="600" y="540" patternUnits="userSpaceOnUse"><rect width="${T}" height="600" fill="url(#mi-gm2)"/>${uses}</pattern>`
     })()
     // ô mẫu cầu: tường theo loại nhịp (40) — 1 nền đắp (vòm mù), 2 một tầng vòm, 3 hai tầng vòm; lòng vòm tối dần, vòng đá, mặt trụ
     const y0 = DECK - 12

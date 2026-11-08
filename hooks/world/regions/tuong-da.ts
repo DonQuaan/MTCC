@@ -123,7 +123,7 @@ function sp(pts: Pt[], close = false): string {
   const a = R[0]
   if (!a) return ''
   let [cx, cy] = a
-  let d = 'M' + J(a)
+  let d = `M${J(a)}`
   let q = ''
   for (let i = 1; i < R.length - 1; i += 1) {
     const p = R[i] as Pt
@@ -135,9 +135,9 @@ function sp(pts: Pt[], close = false): string {
     cx = mx
     cy = my
   }
-  if (q) d += 'q' + q
+  if (q) d += `q${q}`
   const z = R[R.length - 1] as Pt
-  if (R.length > 1) d += 'l' + J([z[0] - cx, z[1] - cy])
+  if (R.length > 1) d += `l${J([z[0] - cx, z[1] - cy])}`
   return d + (close ? 'Z' : '')
 }
 /** Vòng kín mượt (đá, cụm rêu): đi qua trung điểm các cạnh. */
@@ -150,7 +150,7 @@ function loop(pts: Pt[]): string {
     return [n0((p[0] + q[0]) / 2), n0((p[1] + q[1]) / 2)]
   }
   let [cx, cy] = mid(n - 1)
-  let d = 'M' + J([cx, cy]) + 'q'
+  let d = `M${J([cx, cy])}q`
   for (let i = 0; i < n; i += 1) {
     const p = R[i] as Pt
     const m = mid(i)
@@ -158,7 +158,7 @@ function loop(pts: Pt[]): string {
     d += (i && (v[0] as number) >= 0 ? ' ' : '') + J(v)
     ;[cx, cy] = m
   }
-  return d + 'Z'
+  return `${d}Z`
 }
 function bl(cx: number, cy: number, rx: number, ry: number, r: () => number, lumps = 8, rough = 0.2): string {
   const ph = r() * 6.28
@@ -177,7 +177,7 @@ function dots(c: string, pts: Pt[]): string {
   let py = 0
   pts.forEach((p, i) => {
     const [x, y] = R0(p)
-    d += (i ? 'm' + J([x - px, y - py]) : 'M' + J([x, y])) + 'h0'
+    d += `${i ? `m${J([x - px, y - py])}` : `M${J([x, y])}`}h0`
     px = x
     py = y
   })
@@ -302,7 +302,7 @@ function mound(a: number, b: number, ox: number, oy: number): string {
   const top: Pt[] = []
   for (let x = a; x < b; x += 80) top.push([x - ox, hill(x) - oy])
   top.push([b - ox, hill(b) - oy])
-  return sp(top) + base(b, a, ox, oy) + 'Z'
+  return `${sp(top) + base(b, a, ox, oy)}Z`
 }
 /** Dải tuyết / sương muối dọc mép đồi [a, b]: mép dưới nhiễu theo x THẾ GIỚI → liền giữa các mảnh, không khía. */
 function frostTop(f: Flags, nz: (x: number, y: number) => number, a: number, b: number, ox: number, oy: number): string {
@@ -314,7 +314,7 @@ function frostTop(f: Flags, nz: (x: number, y: number) => number, a: number, b: 
     top.unshift([X - ox, hill(X) - oy - 2])
     bot += `L${xy(X - ox, hill(X) - oy + (f.snow ? 22 : 5) + fbm(nz, X / 70, 0.5, 3) * (f.snow ? 44 : 12))}`
   }
-  return P(f.snow ? 'p3' : 'f3', sp(top) + bot + 'Z', f.snow ? '' : o(0.3 + f.rime * 0.3))
+  return P(f.snow ? 'p3' : 'f3', `${sp(top) + bot}Z`, f.snow ? '' : o(0.3 + f.rime * 0.3))
 }
 /** Dải cỏ viền dọc đường y(x), nghiêng theo dốc. */
 function fringe(a: number, b: number, y: (x: number) => number, step = 150): string {
@@ -362,7 +362,7 @@ function headPiece(ctx: Ctx, f: Flags): Piece {
   // ── sườn cỏ sau đầu = tóc: một khối liền với đồi, trùm qua vòm đầu rồi đổ về vai
   // mép tóc–đồi: dáng dài lệch (dốc đứng phía trán, đuôi tóc trải dài xuống trái), mép gồ nhiễu fbm như bờ rêu, không vòm tròn
   const crest = wob([[-600, gy(-600)], [-540, gy(-540) - 10], [-470, gy(-470) - 50], [-420, 130], [-366, 62], [-316, -4], [-270, -70], [-226, -124], [-180, -168], [-120, -204], [-40, -216], [40, -198], [100, -156], [152, -80], [214, hill(HX + 214) - HY]], f.lite ? 5 : 10, nz, 2)
-  let w = cap(f, 'tb') + turf('tb', sp(crest) + base(HX + 214, HX - 600, HX, HY) + 'Z', f) + (f.lite || f.rain ? '' : shade('tb', 0))
+  let w = cap(f, 'tb') + turf('tb', `${sp(crest) + base(HX + 214, HX - 600, HX, HY)}Z`, f) + (f.lite || f.rain ? '' : shade('tb', 0))
   // khối tóc tròn đầy: đỉnh bắt sáng phía nguồn, chân sau gáy chìm tối (gradient tròn, không mép)
   if (!f.snow && !f.rain) w += `<ellipse cx="${f.am ? -120 : -20}" cy="-176" rx="130" ry="36" fill="url(#td-rh)"${o(f.night ? 0.2 : 0.36)}/><ellipse cx="-340" cy="70" rx="210" ry="140" fill="url(#td-rs)"${o(0.45)}/>`
   // lọn tóc rêu: rãnh tối chạy song song mép lưng, đuôi cuộn ở chân đồi — tóc chảy xuống chứ không phải mũ
@@ -375,12 +375,12 @@ function headPiece(ctx: Ctx, f: Flags): Piece {
   if (flw) w += P('td-kfl', sp(crest.slice(8, 23).map(([x, y]) => [x + 12, y + 24] as Pt)), S === 'xuan' ? ' style="stroke-width:34"' : '')
 
   // ── mặt đá xoay: khối sứt mép, địa y, mặt phẳng sáng–tối, khe nứt, rêu theo vệt nước, vòm cỏ & viền rêu chân tóc
-  let h = cap(f, 'fa', 3, -5) + `<g class="td-gt"><path id="td-fa" d="${rel(rough(FACE, 4, nz, f.lite ? 1 : 2))}"/></g>` + U('ea', 'td-gt') + (f.lite ? '' : P('sh', 'M146-20C158-24 162 0 158 20C156 40 160 64 152 80C146 60 150 20 146-20Z', o(0.4)))
+  let h = `${cap(f, 'fa', 3, -5)}<g class="td-gt"><path id="td-fa" d="${rel(rough(FACE, 4, nz, f.lite ? 1 : 2))}"/></g>${U('ea', 'td-gt')}${f.lite ? '' : P('sh', 'M146-20C158-24 162 0 158 20C156 40 160 64 152 80C146 60 150 20 146-20Z', o(0.4))}`
   if (!f.lite) h += '<use href="#td-fa" fill="url(#td-pl)"/>'
   // mặt quay đi khỏi nguồn sáng tối hẳn một nửa → khối tròn của đầu; đêm: trăng trên cao rọi sáng trán & gò má (tách khỏi đồi tối)
   h += U('pr', f.am ? 'sh' : 'hl', f.am ? 0.24 : 0.32) + U('pq', 'sh', f.am ? 0.16 : 0.34) + U('fs', 'sh', f.night ? 0.5 : 0.44) + U('fh', 'hl', f.night ? 0.4 : f.am ? 0.4 : 0.3) + U('fo') + U('fp', '', f.am ? 1 : 0.7) + U('fk', 'k1', 0.62)
   // má trái vỡ một mảng: mặt vỡ phẳng, mép trên bắt sáng; sứt nhỏ ở thái dương & cằm
-  h += P('s3', 'M-104 14l10-11 13 3 9-1 8 13-9 9-13 0-11 4Z' + (f.lite ? '' : 'M150-20l8 6-2 10-8 2ZM-60 150l12-4 8 6-4 6Z'), o(0.7)) + U('ck', 'k1', 0.5)
+  h += P('s3', `M-104 14l10-11 13 3 9-1 8 13-9 9-13 0-11 4Z${f.lite ? '' : 'M150-20l8 6-2 10-8 2ZM-60 150l12-4 8 6-4 6Z'}`, o(0.7)) + U('ck', 'k1', 0.5)
   if (!f.lite) {
     h += P('z3', 'M-104 14l10-11 13 3 9-1M27-124l-4 14 3 12M144 8l-7 16 1 12')
     // rêu đọng nơi khuất & mặt trên (gờ mày, nếp mũi–má, dưới môi) rồi chảy theo vệt nước xuống trái–dưới thế giới
@@ -402,7 +402,7 @@ function headPiece(ctx: Ctx, f: Flags): Piece {
   rim.push([176, hill(HX + 176) - HY + 10], [214, hill(HX + 214) - HY + 6])
   const sh = rim.slice(5, 11)
   let front = f.lite ? '' : P('k1', sp([...sh.map(([x, y]) => [x, y - 14] as Pt), ...[...sh].reverse()].filter((_, i) => i % 2 === 0), true), o(0.18))
-  front += cap(f, 'm0') + turf('m0', sp(rim) + base(HX + 214, HX - 300, HX, HY) + 'Z', f) + (f.lite ? '' : shade('m0', 0))
+  front += cap(f, 'm0') + turf('m0', `${sp(rim) + base(HX + 214, HX - 300, HX, HY)}Z`, f) + (f.lite ? '' : shade('m0', 0))
   const rimY = (x: number) => {
     for (let i = 1; i < rim.length; i += 1) {
       const a = rim[i - 1] as Pt
@@ -421,7 +421,7 @@ function headPiece(ctx: Ctx, f: Flags): Piece {
   const svg =
     G(`translate(${HX} ${HY})`, w) +
     G(`translate(${HX} ${HY})rotate(${HA})scale(${HK})`, h) +
-    G(`translate(${HX} ${HY})`, front + top + `<g class="sw2">${sprout}</g>${f.lite ? '' : `<g class="sw1">${use('fe', -170, -160)}</g>`}`)
+    G(`translate(${HX} ${HY})`, `${front + top}<g class="sw2">${sprout}</g>${f.lite ? '' : `<g class="sw1">${use('fe', -170, -160)}</g>`}`)
   // ── đêm: khe nứt & mí mắt rỉ sáng rất mờ như đang mơ, bụi sáng bay lên
   let glow = ''
   if (f.night) {
@@ -430,7 +430,7 @@ function headPiece(ctx: Ctx, f: Flags): Piece {
       let motes = ''
       for (const [i, [x, y]] of ([[20, -110], [-120, 40]] as Pt[]).entries()) {
         const [wx, wy] = T(x, y)
-        motes += P('td-kz td-mo', `M${xy(wx, wy)}h0`, anim(ctx, 13, 'td-mo' + i))
+        motes += P('td-kz td-mo', `M${xy(wx, wy)}h0`, anim(ctx, 13, `td-mo${i}`))
       }
       glow += G(`translate(${HX} ${HY})`, motes)
     }
@@ -448,7 +448,7 @@ function shoulderPiece(ctx: Ctx, f: Flags): Piece {
   const hy = (x: number) => hill(ox + x) - oy
   let s = turf('m1', mound(9860, 10330, ox, oy), f) + (f.lite ? '' : shade('m1', 1)) + frostTop(f, ctx.noise('td-tuyet'), 9860, 10300, ox, oy)
   // mỏm đá (cơ vai) dâng khỏi cỏ rồi chìm dần về phía tay; chân bị cỏ phủ
-  s += cap(f, 'vd') + `<g class="td-gt"><path id="td-vd" d="${rel(rough([[-110, hy(-110) + 12], [-96, hy(-96) - 6], [-60, -28], [-10, -32], [44, -26], [96, hy(96) - 6], [130, hy(130) + 12]], 3, nz, f.lite ? 2 : 3))}"/></g>`
+  s += `${cap(f, 'vd')}<g class="td-gt"><path id="td-vd" d="${rel(rough([[-110, hy(-110) + 12], [-96, hy(-96) - 6], [-60, -28], [-10, -32], [44, -26], [96, hy(96) - 6], [130, hy(130) + 12]], 3, nz, f.lite ? 2 : 3))}"/></g>`
   if (!f.lite) s += '<use href="#td-vd" fill="url(#td-pl)"/>'
   s += P('hl', f.am ? 'M-108-14C-92-30-60-36-24-38C-60-32-88-24-104-8Z' : 'M10-38C50-34 84-20 104-2C80-14 50-28 10-38Z', o(0.2)) + P('sh', f.am ? 'M40-26C80-14 106-2 120 14L60 20C66 0 56-14 40-26Z' : 'M-110-8C-104-22-84-30-60-34C-80-22-92-6-94 14Z', o(0.22))
   // rêu đóng trên lưng đá, rủ giọt theo vệt nước
@@ -475,7 +475,7 @@ function shoulderPiece(ctx: Ctx, f: Flags): Piece {
     if (S === 'xuan') tree += dots('td-kp', [[-14, -60], [16, -78], [26, -58]])
   } else if (f.late) tree += dots('td-kp', [[-22, -48], [14, -66], [-6, -40]])
   if (f.snow) tree += P('p3', 'M-24-49l14-1-1 2-13 1ZM8-58l8-6v2l-7 6Z')
-  s += G(`translate(${tx} ${ty})`, `<g class="sw4">${tree}</g>` + P('ao', 'M-14 3a14 3 0 0 0 28 0Z'))
+  s += G(`translate(${tx} ${ty})`, `<g class="sw4">${tree}</g>${P('ao', 'M-14 3a14 3 0 0 0 28 0Z')}`)
   if (S === 'thu' && !f.lite) s += P('l3 td-lv', `M${xy(tx + 10, ty - 70)}q4-5 9 0q-4 5-9 0`, anim(ctx, 12, 'td-lv0'))
   s += fringe(150, 380, x => hy(x) - 1, f.lite ? 300 : 150) + fringe(-130, 140, x => hy(x) + (Math.abs(x) < 110 ? -2 : -1), f.lite ? 270 : 135)
   if (!f.lite) s += `<g class="sw1">${use('gu', 300, hy(300) + 2)}</g>`
@@ -505,13 +505,13 @@ function handPiece(ctx: Ctx, f: Flags): Piece {
   const ay = n0(hy(ax))
   // ── bàn tay (hệ riêng, gốc trên mặt cỏ giữa lòng bàn tay)
   let s = P('ao', 'M-214 8C-120-4 40-4 112 6C40 16-120 16-214 8Z', o(0.5))
-  s += cap(f, 'ca') + `<g class="td-gt"><path id="td-ca" d="${rel(rough([[-216, 12], [-204, -14], [-160, -32], [-100, -40], [-56, -40], [-24, -46], [-20, 12]], 2.5, nz, 2))}"/></g>`
+  s += `${cap(f, 'ca')}<g class="td-gt"><path id="td-ca" d="${rel(rough([[-216, 12], [-204, -14], [-160, -32], [-100, -40], [-56, -40], [-24, -46], [-20, 12]], 2.5, nz, 2))}"/></g>`
   if (!f.lite) s += '<use href="#td-ca" fill="url(#td-pl)"/>'
   if (!f.lite) s += P('hl', 'M-200-8C-180-26-140-36-100-40C-70-42-46-42-26-46C-46-38-70-36-100-34C-140-30-176-20-200-8Z', o(0.3)) + P('td-gm', 'M-170-26c20-12 50-14 70-10c-14 2-26 2-36 6c-12 2-22 2-34 4Z')
   const fing = FING.map(([c, wd, tk]) => limb(c, wd, tk))
   const fin = (L: Limb, i: number) => {
     const k = litSide(L, f.am)
-    let t = `<use href="#td-f${i}" class="k1" x="4" y="2"${o(0.36)}/><g class="td-gt"><path id="td-f${i}" d="${rel(shape(L))}"/></g>` + (f.lite ? '' : P('hl', band(L, k, 0.42), o(0.22)))
+    let t = `<use href="#td-f${i}" class="k1" x="4" y="2"${o(0.36)}/><g class="td-gt"><path id="td-f${i}" d="${rel(shape(L))}"/></g>${f.lite ? '' : P('hl', band(L, k, 0.42), o(0.22))}`
     if (FING[i]?.[2] === 0.1) {
       const e = L.c[L.c.length - 1] as Pt
       const q = L.n[L.n.length - 1] as Pt
@@ -531,7 +531,7 @@ function handPiece(ctx: Ctx, f: Flags): Piece {
   let nest = P('d2', 'M-24-2a25 5 0 1 0 50 0a25 5 0 1 0-50 0Z')
   if (S === 'xuan') nest += dots('td-ku', [[-8, -5], [3, -6], [12, -4]])
   else if (S === 'ha') nest += dots('td-kk', [[-6, -7], [9, -8]])
-  nest += P('b2', 'M-27-1q2 18 28 18q26 0 28-18q-28 7-56 0Z') + P('td-kb', 'M-24 4q25 8 50 0' + (f.lite ? '' : 'M-18 10q19 6 38 0M-28-3l9 3M24-2l8-5M-12-2l-6 14M14-1l4 13')) + P('td-kd', 'M-27-1q28 8 56 0')
+  nest += P('b2', 'M-27-1q2 18 28 18q26 0 28-18q-28 7-56 0Z') + P('td-kb', `M-24 4q25 8 50 0${f.lite ? '' : 'M-18 10q19 6 38 0M-28-3l9 3M24-2l8-5M-12-2l-6 14M14-1l4 13'}`) + P('td-kd', 'M-27-1q28 8 56 0')
   if (S === 'thu') nest += P('l3', 'M8-2q8-8 18-2q-9 6-18 2Z')
   if (f.snow || f.frost) nest += P(f.snow ? 'p3' : 'f3', 'M-28-2q28 6 56 0q-28 10-56 0Z', f.snow ? '' : o(0.6))
   s += G(`translate(${NEST[0]} ${NEST[1]})`, nest)
@@ -544,7 +544,7 @@ function handPiece(ctx: Ctx, f: Flags): Piece {
   const px = 252
   let c = P('ao', 'M-28 0h58l-4 4h-50Z') + cap(f, 'cl', 0, -5) + idp('td-gt', 'cl', 'M-16 0V-96l6-8 6 5 5-10 7 6 6-2V0Z') + P(f.am ? 'sh' : 'hl', 'M6 0V-98l8-2V0Z', o(0.3)) + P('z2', 'M-8-94V-4M0-96V-4', o(0.5))
   if (!f.lite) c += P('td-gm', 'M-18-96c6-14 26-16 34-2c-8-4-14 2-20 0c-6-2-10 4-14 2ZM-16-16c0-20 6-40 2-60c6 14 6 40 6 60Z')
-  w += G(`translate(${px} ${n0(hy(px))})`, c) + `<use href="#td-col" transform="translate(${xy(214, hy(214) + 6)})rotate(12)"/>`
+  w += `${G(`translate(${px} ${n0(hy(px))})`, c)}<use href="#td-col" transform="translate(${xy(214, hy(214) + 6)})rotate(12)"/>`
   // bãi cỏ phẳng cạnh bàn tay (mèo ngủ xuân/hạ)
   const cx = 180
   w += `<g class="sw3">${use('gu', cx - 58, hy(cx - 58) + 4)}</g>`
@@ -602,10 +602,10 @@ function stepsPiece(ctx: Ctx, f: Flags): Piece {
   sign += `<text class="k2 td-tx"><tspan x="-28" y="${by - 35}">suỵt…</tspan><tspan x="-28" y="${by - 27}">người đang ngủ</tspan></text>`
   if (f.snow) sign += P('p3', `M-32 ${by - 45}h62v3h-62Z`)
   s += G(`translate(${bx} 0)rotate(-5 0 ${by})`, sign)
-  s += `<g class="sw3">${use('gu', -104, 96)}</g>` + (f.lite ? '' : `<g class="sw2">${use('gu', 104, 92)}</g>`)
+  s += `<g class="sw3">${use('gu', -104, 96)}</g>${f.lite ? '' : `<g class="sw2">${use('gu', 104, 92)}</g>`}`
   if ((S === 'xuan' || S === 'ha') && !f.night) s += use('fc', -116, 100)
   let glow = ''
-  if (f.night) glow = G(`translate(${ox + lx} ${oy})`, `<ellipse cy="${L(-44)}" rx="48" ry="42" fill="url(#gw)" class="fl"/>` + P('e1 fl', `M-5 ${L(-37)}h10v-13h-10Z`))
+  if (f.night) glow = G(`translate(${ox + lx} ${oy})`, `<ellipse cy="${L(-44)}" rx="48" ry="42" fill="url(#gw)" class="fl"/>${P('e1 fl', `M-5 ${L(-37)}h10v-13h-10Z`)}`)
   return { layer: 3, x0: ox - 150, x1: ox + 140, prio: 7, svg: G(`translate(${ox} ${oy})`, s), glow }
 }
 
@@ -734,7 +734,7 @@ function defs(ctx: Ctx, f: Flags): string {
     `<g id="td-fe">${P('td-kfe', fe)}${P('td-kfe', 'M0 0q4-18 20-26M0 0q-8-16-22-18', ' style="stroke:var(--l2)"')}</g>` +
     (f.lite ? '' : `<pattern id="td-pg" width="190" height="110" patternUnits="userSpaceOnUse">${P('td-kg', e, ' opacity=".7"')}${P('td-kl', g, ' opacity=".7"')}</pattern>`) +
     (f.lite ? '' : `<pattern id="td-pl" width="70" height="58" patternUnits="userSpaceOnUse">${dots('td-q1', md.slice(0, 5))}${dots('td-q2', md.slice(5, 9))}${dots('td-q3', md.slice(9))}</pattern>`) +
-    (flw ? `<pattern id="td-pf" width="72" height="58" patternUnits="userSpaceOnUse">${P('td-kc0 ' + fA, p1)}${P('td-kc0 ' + fB, p2)}</pattern>` : '') +
+    (flw ? `<pattern id="td-pf" width="72" height="58" patternUnits="userSpaceOnUse">${P(`td-kc0 ${fA}`, p1)}${P(`td-kc0 ${fB}`, p2)}</pattern>` : '') +
     stp +
     `<path id="td-ea" d="${rel(EAR)}"/><path id="td-pr" d="${rel(PR)}"/><path id="td-pq" d="${rel(PL)}"/><path id="td-fs" d="${rel(FS)}"/><path id="td-fh" d="${rel(FH)}"/><path id="td-fk" d="${rel(FK)}"/><path id="td-ck" d="${rel(CRK)}"/>` +
     // mảng mềm (gradient tròn, không mép): hốc mắt dưới gờ mày, má quay đi · mí trên phồng, gò má bắt sáng

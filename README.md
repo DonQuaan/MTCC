@@ -33,6 +33,7 @@ Trong app Claude desktop (nơi `/plugin` không chạy): bấm **+** cạnh ô n
 | `/giao-dien` | Mở Studio |
 | `/giao-dien the-gioi` | Dùng thế giới nền |
 | `/giao-dien cua-so` | Xem cảnh trong một khung cạnh khung chat ("Thế giới nền", hoặc "Hình nền" khi dùng bản in tĩnh) |
+| `/giao-dien tu-mo <bat\|tat>` | Tự mở khung đó mỗi phiên khi app chưa vẽ nền sau khung chat (mặc định: bật) |
 | `/giao-dien dia-hinh` · `son-mai` · `thien-do` · `giay-do` | Một trong 4 bản in tĩnh |
 | `/giao-dien troi <tu-nhien\|nang\|may-it\|may-vua\|may-nhieu\|gio\|suong\|phun\|mua\|mua-rao\|mua-to\|tuyet>` | Xem trước thời tiết |
 | `/giao-dien mua <tu-nhien\|xuan\|ha\|thu\|dong>` | Xem trước mùa |
@@ -46,8 +47,9 @@ Trong app Claude desktop (nơi `/plugin` không chạy): bấm **+** cạnh ô n
 
 - Nền chỉ vẽ trong app Claude desktop (tab Code); terminal không vẽ nền.
 - App chỉ vẽ nền khi lớp vẽ nền của nó được bật — việc này do một cờ tính năng phía máy chủ của app quyết định, mod không đổi
-  được. Khi chưa bật, mod nói rõ lý do và hiện cảnh trong khung "Thế giới nền" cạnh khung chat (nút **Cửa sổ** trên dòng trạng
-  thái, hoặc `/giao-dien cua-so`); khi app bật lớp này, nền tự hiện sau khung chat.
+  được. Khi chưa bật, mỗi phiên trong app desktop mod tự mở một lần khung xem cảnh cạnh khung chat ("Thế giới nền", hoặc
+  "Hình nền" khi dùng bản in tĩnh). Tắt bằng `/giao-dien tu-mo tat`; mở lại bất cứ lúc nào bằng nút **Cửa sổ** trên dòng
+  trạng thái hoặc `/giao-dien cua-so`. Khi app bật lớp này, nền tự hiện sau khung chat và khung không tự mở nữa.
 - Bản vẽ được thay mới đúng lúc hết mỗi khung 2 phút; hoạt ảnh chỉ dùng transform và opacity.
 
 ## Phát triển
@@ -55,6 +57,7 @@ Trong app Claude desktop (nơi `/plugin` không chạy): bấm **+** cạnh ô n
 ```
 claude plugin validate .
 claude plugin test .
+npx -y @biomejs/biome@2.6.6 lint
 ```
 
 Thư mục `.claude-plugin/types/` (kiểu TypeScript mà `tsconfig.json` dựa vào) do Claude Code sinh ra khi nạp mod, nên không

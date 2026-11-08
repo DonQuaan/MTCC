@@ -128,7 +128,7 @@ function make(ctx: Ctx, dens: number): { out: Out; n: number } {
       for (let i = 0; i < all.length; ) {
         const v = f((all[i] as Pt)[1], 2)
         const at: string[] = []
-        while (i < all.length && f((all[i] as Pt)[1], 2) === v) at.push(f(((all[i++] as Pt)[0] / span) * 100, 2) + '%')
+        while (i < all.length && f((all[i] as Pt)[1], 2) === v) at.push(`${f(((all[i++] as Pt)[0] / span) * 100, 2)}%`)
         kf += `${at.join(',')}{opacity:${v}}`
       }
       let id = kfs.get(kf)
@@ -170,7 +170,10 @@ function make(ctx: Ctx, dens: number): { out: Out; n: number } {
     }
     // màu chung của gradient đặt qua class (wr-hz: sương · wr-wc: mưa · wr-sc: tuyết) thay vì lặp style ở từng điểm dừng
     const gcls = new Set<string>()
-    const gc = (c: 'hz' | 'wc' | 'sc') => (gcls.add(c), ` class="wr-${c}"`)
+    const gc = (c: 'hz' | 'wc' | 'sc') => {
+      gcls.add(c)
+      return ` class="wr-${c}"`
+    }
     const so = (o: string, a: string) => `<stop${o === '0' ? '' : ` offset="${o}"`}${a === '1' ? '' : ` stop-opacity="${a}"`}/>`
     const streaks = (id: string, tw: number, th: number, deg: number, n: number, l0: number, l1: number, wd: number, op: number, r: () => number, line = false) => {
       let d = ''
@@ -391,7 +394,7 @@ function make(ctx: Ctx, dens: number): { out: Out; n: number } {
       }
       const sg = (id: string, a: string, b: string) => `<radialGradient id="${id}"${gc('sc')}>${so(a, b)}${so('1', '0')}</radialGradient>`
       // mây tuyết hắt sáng mờ (bầu trời đêm tuyết đục, sáng hơn đêm quang): phủ SAU lớp tô màu đêm nên không bị dìm tối
-      defs += sg('wr-sf', '.3', '.95') + sg('wr-sh', '0', '.6') + `<linearGradient id="wr-sz" x2="0" y2="1"><stop stop-color="${mix('#8f97b8', '#e8ecf2', dl)}" stop-opacity=".2"/><stop offset=".7" stop-color="${mix('#8f97b8', '#e8ecf2', dl)}" stop-opacity=".08"/><stop offset="1" stop-color="#fff" stop-opacity=".04"/></linearGradient>`
+      defs += `${sg('wr-sf', '.3', '.95') + sg('wr-sh', '0', '.6')}<linearGradient id="wr-sz" x2="0" y2="1"><stop stop-color="${mix('#8f97b8', '#e8ecf2', dl)}" stop-opacity=".2"/><stop offset=".7" stop-color="${mix('#8f97b8', '#e8ecf2', dl)}" stop-opacity=".08"/><stop offset="1" stop-color="#fff" stop-opacity=".04"/></linearGradient>`
       flakes('wr-n2', 400, 360, 9, 3, 5, 1.3, 'wr-sf')
       flakes('wr-n3', 720, 640, 4, 8, 13, 1.4, 'wr-sf') // gần: kéo dài theo chiều rơi
       flakes('wr-n4', 900, 800, 3, 14, 18, 1.4, 'wr-sh') // rất gần: to, mềm như nhoè nét
@@ -555,7 +558,7 @@ function make(ctx: Ctx, dens: number): { out: Out; n: number } {
           const near = season !== 'ha' && u > 0.8
           const c = k.cls()
           // hoạt ảnh lộn/xoay trên <g> bọc ký hiệu (không đặt trên <use>): fill-box của nhóm = khung hạt → tâm xoay như cũ
-          g += `<g${near ? ' class="wr-bl"' : ''} style="--x:${R(p.x)};--y:${R(p.y)};--w:${R(p.w)};--e:${R(p.e)};--s:${f(s)};--d:${d}s;--o:${ph(d, r)}s"><g class="${k.ic}${c ? ' ' + c : ''}"><use href="#${k.sym}"/>${k.ex ?? ''}</g></g>`
+          g += `<g${near ? ' class="wr-bl"' : ''} style="--x:${R(p.x)};--y:${R(p.y)};--w:${R(p.w)};--e:${R(p.e)};--s:${f(s)};--d:${d}s;--o:${ph(d, r)}s"><g class="${k.ic}${c ? ` ${c}` : ''}"><use href="#${k.sym}"/>${k.ex ?? ''}</g></g>`
           enc += 7 + (k.ex?.length ?? 0) // vỏ <g></g> (class trước nằm trên <use>) + bộ phận động tách khỏi ký hiệu
         }
       }

@@ -28,7 +28,7 @@ const P = (c: string, d: string, a = '') => (d ? `<path class="${c}" d="${td(d)}
 const Fu = (id: string, d: string, a = '') => `<path fill="url(#${id})" d="${td(d)}"${a}/>`
 const O = (o: number) => ` opacity="${f2(o)}"`
 const G = (x: number, y: number, s: string, k = 1, ky = k) =>
-  s ? `<g transform="translate(${N(x)} ${N(y)})${k === 1 && ky === 1 ? '' : `scale(${f2(k)}${ky === k ? '' : ' ' + f2(ky)})`}">${s}</g>` : ''
+  s ? `<g transform="translate(${N(x)} ${N(y)})${k === 1 && ky === 1 ? '' : `scale(${f2(k)}${ky === k ? '' : ` ${f2(ky)}`})`}">${s}</g>` : ''
 const U = (id: string, x: number, y: number, a = '') => `<use href="#ln-${id}"${N(x) ? ` x="${N(x)}"` : ''}${N(y) ? ` y="${N(y)}"` : ''}${a}/>`
 /** <use> có tỉ lệ / lật ngang / xoay. */
 const UT = (id: string, x: number, y: number, k: number, flip = false, a = '', rot = 0) =>
@@ -45,7 +45,7 @@ function dots(c: string, pts: Pt[], w = 3): string {
   pts.forEach(([x, y], i) => {
     const X = N(x)
     const Y = N(y)
-    d += (i ? `m${X - px} ${Y - py}` : `M${X} ${Y}`) + 'h0'
+    d += `${i ? `m${X - px} ${Y - py}` : `M${X} ${Y}`}h0`
     px = X
     py = Y
   })
@@ -65,14 +65,14 @@ function loop(pts: Pt[]): string {
     d += `q${p[0] - c[0]} ${p[1] - c[1]} ${m[0] - c[0]} ${m[1] - c[1]}`
     c = m
   }
-  return d + 'z'
+  return `${d}z`
 }
 /** Đường mở mượt đi qua điểm đầu & cuối. */
 function line(pts: Pt[]): string {
   const r = pts.map(([x, y]) => [N(x), N(y)] as Pt)
   let c = r[0] as Pt
   let d = `M${c[0]} ${c[1]}`
-  if (r.length === 2) return d + `l${(r[1] as Pt)[0] - c[0]} ${(r[1] as Pt)[1] - c[1]}`
+  if (r.length === 2) return `${d}l${(r[1] as Pt)[0] - c[0]} ${(r[1] as Pt)[1] - c[1]}`
   for (let i = 1; i < r.length - 1; i += 1) {
     const p = r[i] as Pt
     const m = i === r.length - 2 ? (r[i + 1] as Pt) : mid(p, r[i + 1] as Pt)
@@ -92,32 +92,20 @@ function lump(r: Rn, cx: number, cy: number, rx: number, ry: number, n = 7, roug
   }
   return loop(pts)
 }
-/** Dải kín mép trên top(x) – mép dưới bot(x). */
-function strip(x0: number, x1: number, step: number, top: (x: number) => number, bot: (x: number) => number): string {
-  const a: Pt[] = []
-  const b: Pt[] = []
-  const n = Math.max(2, Math.round((x1 - x0) / step))
-  for (let i = 0; i <= n; i += 1) {
-    const x = x0 + ((x1 - x0) * i) / n
-    a.push([x, top(x)])
-    b.push([x, bot(x)])
-  }
-  return line([...a, ...b.reverse()]) + 'z'
-}
 /** Vòm lá tơ: mép trên răng cưa, mép dưới rủ tua. Gốc (cx, by) ở đáy giữa. */
 function feather(r: Rn, cx: number, by: number, w: number, h: number, n = 14): string {
   const top: Pt[] = []
   const bot: Pt[] = []
   for (let i = 0; i <= n; i += 1) {
     const t = i / n
-    const hh = h * (0.3 + 0.7 * Math.pow(Math.sin(Math.PI * t), 0.6))
+    const hh = h * (0.3 + 0.7 * Math.sin(Math.PI * t) ** 0.6)
     top.push([cx - w / 2 + w * t + (r() - 0.5) * 6, by - hh - (i % 2 ? h * 0.08 : 0)])
   }
   for (let i = n; i >= 0; i -= 2) {
     const t = i / n
     bot.push([cx - w * 0.46 + w * 0.92 * t, by + (i % 4 ? h * 0.12 : 0)])
   }
-  return line([...top, ...bot]) + 'z'
+  return `${line([...top, ...bot])}z`
 }
 
 // ───────────────────────── hằng số nhà ─────────────────────────
@@ -176,7 +164,7 @@ function mossBand(r: Rn): string {
   const W = 2 * GW + 3 * BW
   const mp: Pt[] = []
   for (let x = -6; x <= W + 6; x += 38) mp.push([x, -3 - r() * (x < 60 || x > W - 60 ? 16 : 7)])
-  return P('m3', line(mp) + `V2H-6z`, O(0.8)) + P('m2', line(mp.map(([x, y]) => [x, y * 0.5 - 1] as Pt)) + `V2H-6z`)
+  return P('m3', `${line(mp)}V2H-6z`, O(0.8)) + P('m2', `${line(mp.map(([x, y]) => [x, y * 0.5 - 1] as Pt))}V2H-6z`)
 }
 
 // ───────────────────────── defs (tạo một lần, tất định) ─────────────────────────
@@ -202,7 +190,7 @@ function buildDefs(ctx: Ctx): string {
   }
   const gable =
     P('w1', rr(0, top, GW, PL - top)) + P('sh', rr(GW - 7, top, 7, PL - top)) + P('z3', `M1 ${top + 2}V${PL - 3}`, O(0.8)) + P('k2', st, O(0.16)) +
-    P('m3', `M0 ${PL}v-18l6 4 5-8 6 6 7-3v19z`, O(0.35)) + P('s2', led + `M-2 ${top - 2}h${GW + 4}l-4-8h${-GW + 4}z`) + P('m2', mo) + Fu('ln-pg', rr(0, top, GW, PL - top))
+    P('m3', `M0 ${PL}v-18l6 4 5-8 6 6 7-3v19z`, O(0.35)) + P('s2', `${led}M-2 ${top - 2}h${GW + 4}l-4-8h${-GW + 4}z`) + P('m2', mo) + Fu('ln-pg', rr(0, top, GW, PL - top))
   const tile = `<path class="r2" d="M0 0h30v110H0z"/><path class="r1" d="M1 0h4v110H1zM11 0h3v110h-3zM21 0h4v110h-4z"/><path class="r3" d="M6 0h3v110H6zM15 0h4v110h-4zM26 0h3v110h-3z" opacity=".75"/><path class="hl" d="M2 0h1v110H2zM22 0h1v110h-1z"/><path class="r1" d="M6 14h3v28H6zM15 70h4v28h-4zM26 42h3v14h-3z" opacity=".8"/><path class="k1" d="M1 56h4v14H1zM21 84h4v14h-4zM11 28h3v14h-3z" opacity=".16"/><path fill="url(#ln-r)" d="M0 0h30v110H0z"/>`
   // cửa bức bàn: bốn cánh, mạch ván lệch, một cánh sẫm một cánh bạc, ô song thoáng, chân cửa bám bẩn (dùng lật để đổi)
   const xs = [7, 28, 50, 71, 93]
@@ -210,14 +198,14 @@ function buildDefs(ctx: Ctx): string {
   let seam = ''
   for (let i = 0; i < 4; i += 1) seam += `M${N(X(i) + 6 + r() * (X(i + 1) - X(i) - 12))}-83v${i % 2 ? 69 : N(24 + r() * 22)}`
   const leaf = (i: number) => rr(X(i), -83, X(i + 1) - X(i), 69)
-  const door = `<path d="${DOOR}"/>` + P('b1', leaf(1), O(0.32)) + P('b3', leaf(3), O(0.3)) + P('ln-sm', seam) + P('k1', 'M28-83h1v69h-1zM50-83h1v69h-1zM71-83h1v69h-1z', O(0.55)) + P('b1', 'M7-58h86v3H7zM7-35h86v3H7z') + P('k1', 'M7-95h86v11H7z') + Fu('ln-s', 'M7-95h86v11H7z') + P('k1', 'M7-26h86v12H7z', O(0.14))
+  const door = `<path d="${DOOR}"/>${P('b1', leaf(1), O(0.32))}${P('b3', leaf(3), O(0.3))}${P('ln-sm', seam)}${P('k1', 'M28-83h1v69h-1zM50-83h1v69h-1zM71-83h1v69h-1z', O(0.55))}${P('b1', 'M7-58h86v3H7zM7-35h86v3H7z')}${P('k1', 'M7-95h86v11H7z')}${Fu('ln-s', 'M7-95h86v11H7z')}${P('k1', 'M7-26h86v12H7z', O(0.14))}`
   // nhành tre dài (dọc +x, rủ cuối) & bụi tre (5 thân vồng, 2 nhành mỗi thân, gốc rậm) — tĩnh; lắc cả bụi ở nơi đặt
   const plume = () => {
     const pts: Pt[] = [[0, 0], [30, -7], [60, -6], [88, 4], [112, 22]]
-    let s = P('l4', line([...pts.map(([x, y]) => [x, y - 5] as Pt), ...pts.slice().reverse().map(([x, y]) => [x, y + 9] as Pt)]) + 'z')
+    let s = P('l4', `${line([...pts.map(([x, y]) => [x, y - 5] as Pt), ...pts.slice().reverse().map(([x, y]) => [x, y + 9] as Pt)])}z`)
     for (let i = 0; i < 7; i += 1) {
       const t = i / 6
-      s += U(i % 3 === 1 ? 'bg' : 'bf', t * 108, -7 * Math.sin(Math.PI * t * 0.9) + 26 * Math.pow(t, 3) - 2)
+      s += U(i % 3 === 1 ? 'bg' : 'bf', t * 108, -7 * Math.sin(Math.PI * t * 0.9) + 26 * t ** 3 - 2)
     }
     return s
   }
@@ -244,7 +232,7 @@ function buildDefs(ctx: Ctx): string {
         const dy = 2 * (1 - t) * C[1] + 2 * t * (E1[1] - C[1])
         const ang = N((Math.atan2(dy, dx) * 180) / Math.PI + (lx >= 0 ? 20 : -20))
         const k = f2(0.6 + 0.3 * t * r() + 0.15)
-        pl += `<use href="#ln-pl" transform="translate(${N(px)} ${N(py)})rotate(${ang})scale(${k} ${lx >= 0 ? k : '-' + k})"/>`
+        pl += `<use href="#ln-pl" transform="translate(${N(px)} ${N(py)})rotate(${ang})scale(${k} ${lx >= 0 ? k : `-${k}`})"/>`
         xMin = Math.min(xMin, px)
         xMax = Math.max(xMax, px)
         yMin = Math.min(yMin, py)
@@ -338,8 +326,7 @@ type Bay = 'd' | 'o' | 'w' | 'g' | 'k'
 type HOpt = { far?: boolean; lit: boolean[]; glowDay?: number }
 
 /** Nếp nhà gian, tường hồi bít đốc: nền, tường, gian cửa, cột hiên, bóng mái răng cưa, bóng trụ, ẩm chân, ố, vôi bong, mái, trụ hồi. */
-function house(ctx: Ctx, id: string, bays: Bay[], o: HOpt): { s: string; g: string; W: number } {
-  const r = ctx.rng('ln-nha-' + id)
+function house(ctx: Ctx, bays: Bay[], o: HOpt): { s: string; g: string; W: number } {
   const n = bays.length
   const W = 2 * GW + BW * n
   const iw = W - 2 * GW
@@ -404,7 +391,7 @@ function houseB(ctx: Ctx, o: { fire: boolean; lit: boolean; snow: boolean }): { 
   let s = `<defs><path id="ln-gf" d="${td(gf)}"/></defs>`
   // ống khói (sau bờ nóc), nền, mặt tiền, gian bếp mở, cửa sổ, cột hiên, bóng mái
   s += Fu('ln-b', rr(chim[0] - 9, rg - 42, 18, 54)) + P('s2', rr(chim[0] - 12, rg - 47, 24, 6))
-  s += P('s3', `M0 ${PL}L${-D} ${PL - dy}v13L0 ${PL + 15}z` + rr(0, PL, FW + 4, 15))
+  s += P('s3', `M0 ${PL}L${-D} ${PL - dy}v13L0 ${PL + 15}z${rr(0, PL, FW + 4, 15)}`)
   s += P('w2', rr(0, E - 2, FW, PL - E + 2)) + Fu('ln-pg', rr(0, E - 2, FW, PL - E + 2)) + U('dr', 12, 0, ' class="b2"') + P('k1', rr(41, -83, 21, 69)) + U('wn', 112, 0)
   s += `<path class="ln-co" d="M14-57h${FW - 30}" stroke-dasharray="8 92"/>`
   s += Fu('ln-q', rr(0, E, FW, 56)) + (ctx.detail !== 'lite' ? Fu('ln-dm', rr(0, PL - 30, FW, 30)) : '')
@@ -413,7 +400,7 @@ function houseB(ctx: Ctx, o: { fire: boolean; lit: boolean; snow: boolean }): { 
   const gd: Pt[] = []
   for (let xx = 0; xx >= -D; xx -= 45) gd.push([xx, PL + (dy * xx) / D - 8 - Math.abs(fbm(nz, xx / 20, 2.2, 2)) * 34])
   const fine = ctx.detail !== 'lite'
-  if (fine) s += P('m3', line(gd) + `L${-D} ${PL - dy}L0 ${PL}z`, O(0.32))
+  if (fine) s += P('m3', `${line(gd)}L${-D} ${PL - dy}L0 ${PL}z`, O(0.32))
   s += P('s2', el(-S, rg + 24, 8, 10)) + P('k1', el(-S, rg + 24, 5, 7)) + P('m3', `M${-D} ${PL - dy}l${D} ${dy}h${FW}v-8l-40-4-30 6-50-8-40 5-48-4-20 2L0 ${PL - 9}l${-D} ${-dy - 6}z`, O(0.75))
   if (fine) s += UT('sp', -62, -44, 0.9)
   // mái nhìn xiên: ngói nghiêng, thớ hàng, viên mới, đầu ngói, rêu mép, bờ nóc vểnh đầu phải
@@ -424,7 +411,7 @@ function houseB(ctx: Ctx, o: { fire: boolean; lit: boolean; snow: boolean }): { 
   // mép tường hồi phải (nhìn cạnh) nhô cao hơn mái
   s += P('w2', `M${FW - 14} ${PL}V${E - 6}l${-S} ${ap - E + 6}h8l${S} ${E - 6 - ap}V${PL}z`) + P('sh', `M${FW - 8} ${PL}V${E - 6}l${-S} ${ap - E + 6}h2l${S} ${E - 6 - ap}V${PL}z`)
   // tuyết đọng bờ nóc & mép ngói
-  if (o.snow) s += `<g transform="matrix(.722 0 .459 .755 24 -24)">${P('w3', `M${GW} ${RG + 2}Q174 ${RG + 22} ${GW + 300} ${RG + 2}V${E - 3}Q174 ${E + 3} ${GW} ${E - 3}z`, O(0.5))}</g>` + P('w3', `M${R0} ${rg - 9}Q${rm} ${rg + 11} ${R1} ${rg - 9}v5Q${rm} ${rg + 16} ${R0} ${rg - 4}zM2 ${ey - 5}Q${mx} ${ey + 7} ${ex - 4} ${ey - 5}v4Q${mx} ${ey + 10} 2 ${ey - 1}z`)
+  if (o.snow) s += `<g transform="matrix(.722 0 .459 .755 24 -24)">${P('w3', `M${GW} ${RG + 2}Q174 ${RG + 22} ${GW + 300} ${RG + 2}V${E - 3}Q174 ${E + 3} ${GW} ${E - 3}z`, O(0.5))}</g>${P('w3', `M${R0} ${rg - 9}Q${rm} ${rg + 11} ${R1} ${rg - 9}v5Q${rm} ${rg + 16} ${R0} ${rg - 4}zM2 ${ey - 5}Q${mx} ${ey + 7} ${ex - 4} ${ey - 5}v4Q${mx} ${ey + 10} 2 ${ey - 1}z`)}`
   let g = o.lit ? U('wg', 112, 0) : ''
   if (o.fire) g += `<g class="fl">${P('e1', rr(42, -56, 19, 42), O(0.85))}${glowC(52, -40, 62)}</g>`
   return { s, g, chim }
@@ -443,7 +430,7 @@ function banana(): string {
     else b += u
   })
   s += P('p1', 'M17-64q5 2 3 12q-2 4-5 1q-2-8 2-13z')
-  return s + `<g class="sw2 ln-eg">${b}</g><g class="sw3 ln-eg">${a}</g>`
+  return `${s}<g class="sw2 ln-eg">${b}</g><g class="sw3 ln-eg">${a}</g>`
 }
 
 // ───────────────────────── vùng ─────────────────────────
@@ -472,7 +459,7 @@ export const region: Region = {
       pieces.push(p)
       if (wrap) vo.set(p, wrap)
     }
-    const ph = (p: number, k: string) => ctx.ph(p, 'ln-' + k)
+    const ph = (p: number, k: string) => ctx.ph(p, `ln-${k}`)
     const h = ctx.vn.hourF
     const S = ctx.season
     const sT = ctx.seasonT
@@ -507,9 +494,9 @@ export const region: Region = {
         const pts: Pt[] = []
         const st = tuft ? 120 : 180
         for (let x = 1800; x <= 3600; x += st) pts.push([x, ground(x) + base + wgt(x) * (my - base + amp * fbm(nz, x / f, my / 50, 3) * 2.6 + (tuft && (x / st) % 2 ? -tuft : 0))])
-        return P(cls, line(pts) + 'V1120H1800z')
+        return P(cls, `${line(pts)}V1120H1800z`)
       }
-      let s = P('g2', `M1800 ${gy(1800) + 30}L2700 ${gy(2700) + 30}L3600 ${gy(3600) + 30}V1120H1800z`) + band('g3', 58, 106, 22, 160, tex ? 5 : 0) + band('g4', 190, 228, 16, 120).replace('/>', O(0.62) + '/>')
+      let s = P('g2', `M1800 ${gy(1800) + 30}L2700 ${gy(2700) + 30}L3600 ${gy(3600) + 30}V1120H1800z`) + band('g3', 58, 106, 22, 160, tex ? 5 : 0) + band('g4', 190, 228, 16, 120).replace('/>', `${O(0.62)}/>`)
       // vân cỏ: gờ đất tương phản thấp chạy theo đường đồng mức (không thêm vật); tuyết phủ thì mất
       if (tex && !snow) {
         let rd = ''
@@ -525,7 +512,7 @@ export const region: Region = {
       if (snow) {
         const sp: Pt[] = []
         for (let x = 1800; x <= 3600; x += 150) sp.push([x, ground(x) + 34 + fbm(nz, x / 90, 9, 2) * 22])
-        s += P('w3', line(sp) + 'V1120H1800z', O(0.42))
+        s += P('w3', `${line(sp)}V1120H1800z`, O(0.42))
       }
       add(1800, 3600, lite ? 8 : 6, s)
     }
@@ -544,7 +531,7 @@ export const region: Region = {
       const X = 2790
       const Y = 712
       const k = 0.62
-      const D = house(ctx, 'D', ['g', 'd'], { far: true, lit: [true, eve], glowDay: 0.3 })
+      const D = house(ctx, ['g', 'd'], { far: true, lit: [true, eve], glowDay: 0.3 })
       let ex = ''
       if (snow) ex += snowRidge(D.W, true)
       if (!lite) add(X - 10, X + 170, 5, G(X, Y, D.s + ex, k), G(X, Y, D.g, k))
@@ -565,7 +552,7 @@ export const region: Region = {
     {
       const X = 3096
       const Y = 764
-      const C = house(ctx, 'C', ['g', 'k'], { lit: [eve || late || dawn, false] })
+      const C = house(ctx, ['g', 'k'], { lit: [eve || late || dawn, false] })
       let ex = ''
       if (snow) ex += snowRidge(C.W)
       add(X - 10, X + 230, 7, G(X, Y, C.s + ex, 0.88, 0.82), G(X, Y, C.g + (trungThu ? lantern(124) : ''), 0.88, 0.82))
@@ -583,10 +570,10 @@ export const region: Region = {
     // (lớp lắc bên trong); tuyết mép mái vẽ SAU đèn nên khi có đèn cũng ra ngoài (giữ thứ tự chồng lớp). Bóng nước KHÔNG soi
     // đèn & tuyết: lật qua mặt ao chúng rơi hẳn ngoài clip #ln-cp (đo cả năm, kể cả biên độ lắc: hở ≥ 19 px) → không vẽ.
     {
-      const A = house(ctx, 'A', ['w', 'o', 'd'], { lit: [eve || dawn, eve, false] })
+      const A = house(ctx, ['w', 'o', 'd'], { lit: [eve || dawn, eve, false] })
       // nón lá treo tường, bóng đèn tròn ngoài hiên
       let ex = (lite ? '' : P('w2', 'M84-74l13-10 13 10q-13 4-26 0z')) + P('ln-ln', 'M174-100v20') + P('w3', el(174, -76, 3, 4))
-      let eg = eve ? `<circle fill="url(#gw)" cx="174" cy="-66" r="60" opacity=".7"/>` + P('e1', el(174, -76, 4, 5), O(0.8)) : ''
+      let eg = eve ? `<circle fill="url(#gw)" cx="174" cy="-66" r="60" opacity=".7"/>${P('e1', el(174, -76, 4, 5), O(0.8))}` : ''
       // đèn lắc (sao / lồng đèn): class lắc & nội dung tĩnh; ngôi sao (thu) và đèn lồng (Tết) không bao giờ cùng lúc
       let hc = ''
       let hl = ''
@@ -631,7 +618,7 @@ export const region: Region = {
         top.push([x, g0 + nz(x / 70, 2) * 5])
         bot.push([x, g0 + wd + nz(x / 60, 3) * 6])
       }
-      add(1980, 2680, 5, P('d1', line([...top, ...bot.reverse()]) + 'z') + (tex ? U('tg', 2420, 812) : ''))
+      add(1980, 2680, 5, P('d1', `${line([...top, ...bot.reverse()])}z`) + (tex ? U('tg', 2420, 812) : ''))
     }
 
     // ── sân gạch (gốc 2640, 760): mép trước sứt, gạch vỡ, rêu kẽ, ô lò cò phấn, phơi thóc, vũng nước
@@ -646,7 +633,7 @@ export const region: Region = {
       const fp: Pt[] = []
       for (let x = 0; x <= L; x += 65) fp.push([x ? x : -24, front(x)])
       fp.splice(1, 0, [14, front(30) - 30])
-      let s = `<defs><path id="ln-yd" d="${td(`M44 ${N(gl(44) + 3)}L${L / 2} ${N(gl(L / 2) + 3)}L${L} ${N(gl(L) + 3)}` + line(fp.slice().reverse()).replace('M', 'L') + 'z')}"/></defs><use href="#ln-yd" fill="url(#ln-c)"/><use href="#ln-yd" class="wetsheen"/><use href="#ln-yd" fill="url(#ln-pg)"/>`
+      let s = `<defs><path id="ln-yd" d="${td(`M44 ${N(gl(44) + 3)}L${L / 2} ${N(gl(L / 2) + 3)}L${L} ${N(gl(L) + 3)}${line(fp.slice().reverse()).replace('M', 'L')}z`)}"/></defs><use href="#ln-yd" fill="url(#ln-c)"/><use href="#ln-yd" class="wetsheen"/><use href="#ln-yd" fill="url(#ln-pg)"/>`
       // bóng tán khế loang trên sân (nắng xuyên tán)
       if (ctx.daylight > 0.5 && !rain && ctx.cur.cloud !== 'u-am') s += P('sh', lump(r, 280, 30, 90, 8, 5, 0.5), O(0.9))
       if (tex) {
@@ -669,7 +656,7 @@ export const region: Region = {
       if (tex && !snow) {
         let gr = `M${L - 70} ${N(gl(L - 70) + 2)}`
         for (let i = 0; i < 7; i += 1) gr += `l10 ${i % 2 ? 7 : -5}`
-        s += P('g2', gr + `l2 ${N(front(L) - gl(L))}l-36 6l-14-${N((front(L) - gl(L)) * 0.6)}z`, O(0.85)) + P('ao', `M0 ${N(gl(0) + 3)}L${L} ${N(gl(L) + 3)}v5L0 ${N(gl(0) + 8)}z`, O(0.3))
+        s += P('g2', `${gr}l2 ${N(front(L) - gl(L))}l-36 6l-14-${N((front(L) - gl(L)) * 0.6)}z`, O(0.85)) + P('ao', `M0 ${N(gl(0) + 3)}L${L} ${N(gl(L) + 3)}v5L0 ${N(gl(0) + 8)}z`, O(0.3))
       }
       // góc sân gạch vỡ, cỏ & rêu lấn vào kẽ (chỗ mèo ngủ): mép răng cưa, nằm trong mặt sân chứ không dán lên
       s += P('m3', 'M530 66q10-6 20-3q8-6 18-2q10-5 18 0q10-4 18 2q8-2 12 3z', O(0.55)) + P('m2', 'M548 61q8-3 14-1M578 60q8-3 13 0', O(0.6)) + P('r3', 'M592 50l12-2 1 5-12 2z', O(0.7))
@@ -683,10 +670,10 @@ export const region: Region = {
     {
       const nz = ctx.noise('ln-ngo')
       const C: Pt[] = [[0, -4], [-26, 60], [-24, 130], [44, 200], [170, 290]]
-      const half = (y: number) => 24 + Math.pow(Math.max(0, y) / 290, 1.3) * 66
+      const half = (y: number) => 24 + (Math.max(0, y) / 290) ** 1.3 * 66
       const side = (sg: number, f: number, c = C) => c.map(([x, y]) => [x + sg * half(y) * (f + nz(y / 40, sg * f) * 0.22), y] as Pt)
-      const band = (a: number, b: number, sg: number, c = C) => line([...side(sg, a, c), ...side(sg, b, c).reverse()]) + 'z'
-      const body = (f: number) => line([...side(-1, f), ...side(1, f).reverse()]) + 'z'
+      const band = (a: number, b: number, sg: number, c = C) => `${line([...side(sg, a, c), ...side(sg, b, c).reverse()])}z`
+      const body = (f: number) => `${line([...side(-1, f), ...side(1, f).reverse()])}z`
       let s = P('g2', body(1.25), O(0.5)) + P('d1', body(1))
       // vệt bánh lún (tối) & gờ giữa hai vệt (sáng), mờ dần lên phía sân
       const Cn = C.slice(1)
@@ -721,7 +708,7 @@ export const region: Region = {
         if (!lite) br += P(fruit, 'M100-56q5 2 5 7t-5 7q-5-2-5-7t5-7z')
       }
       const thin = ''
-      t += `<g class="sw4 ln-eg"${thin}>${can}</g>` + (br ? `<g class="sw3 ln-eg"${thin}>${br}</g>` : '')
+      t += `<g class="sw4 ln-eg"${thin}>${can}</g>${br ? `<g class="sw3 ln-eg"${thin}>${br}</g>` : ''}`
       if (tet) t += SK('b3', 2, 'M-56 40v-268') + G(-56, -224, P('l2', 'M0 0q-12-6-20 4q10-2 20 0q-4-14 6-20q2 10-6 20q14-4 22 4q-12 0-22-8z') + P('ln-ln', 'M0 4l-8 40M0 4l8 36') + P('p1', 'M-10 44h5l-1 8h-3zM6 40h5l-1 8h-3z'))
       add(2800, 3040, 7, G(2904, 772, t))
       if (S === 'xuan' || S === 'ha') spots.push({ kind: 'butterflies', layer: 3, x: 2930, y: 700, s: 1, w: 120 })
@@ -730,7 +717,6 @@ export const region: Region = {
     // ── GIẾNG LÀNG (tiêu điểm): bệ đá loang nước, thành gạch hắt sáng trái, rêu chân, tang trống & gàu;
     //    đáy giếng soi một bầu trời khác giờ: trưa thấy trăng khuyết & sao, đêm thấy trời xanh có mây
     {
-      const r = ctx.rng('ln-gieng')
       const wall = 'M-32-40v34q32 9 64 0v-34z'
       let s = P('ao', el(2, 3, 72, 10)) + P('s3', el(0, -1, 64, 13)) + (wet > 0.15 ? P('a2', el(18, 2, 30, 5), O(0.3 + wet * 0.4)) : '') + Fu('ln-b', wall) + Fu('ln-h', wall)
       s += P('m2', 'M-32-6v-10q6-6 10-2q6-8 12-1q8-6 14 1q6-6 12 0q6-6 14 0v12q-32 9-64 0z') + (tex ? U('fn', -22, -18) : '')
@@ -770,7 +756,7 @@ export const region: Region = {
       const jx = 2452
       const jy = 818
       let j = U('j', 0, 0) + U('j', 30, 4) + (lite ? '' : UT('j', -24, 6, 0.66))
-      if (rain) j += `<path class="ln-dp" d="M0-124V-42M30-120V-38"/>` + (pour ? SK('a1', 1.4, `M${AX + 30 - jx} -128v118`, 0.4) : '')
+      if (rain) j += `<path class="ln-dp" d="M0-124V-42M30-120V-38"/>${pour ? SK('a1', 1.4, `M${AX + 30 - jx} -128v118`, 0.4) : ''}`
       if (snow) j += P('w3', el(0, -43, 13, 3) + el(30, -39, 13, 3))
       add(2420, 2500, lite ? 8 : 6, G(jx, jy, j))
     }
@@ -809,10 +795,10 @@ export const region: Region = {
         for (let i = 0; i < 5; i += 1) bo.push([-140 + r() * 60 + (i % 3) * 110, 4 + r() * 16])
         s += dots('l1', bo, 2.4)
       }
-      s += P('b2', 'M60-24h3v30h-3zM70-20h3v24h-3z') + ripple(rain ? 40 : 64, 4, 10, 'p') + '</g>'
+      s += `${P('b2', 'M60-24h3v30h-3zM70-20h3v24h-3z') + ripple(rain ? 40 : 64, 4, 10, 'p')}</g>`
       let lip = 'M-150 21'
       for (let i = 0; i < 9; i += 1) lip += `l${N(17 + r() * 9)} ${i % 2 ? N(6 + r() * 4) : -N(5 + r() * 6)}`
-      s += P(snow ? 'w3' : 'g3', lip + 'V34H-150z', O(0.9))
+      s += P(snow ? 'w3' : 'g3', `${lip}V34H-150z`, O(0.9))
       add(2120, 2460, 6, G(X, Y, s))
     }
 
@@ -850,7 +836,7 @@ export const region: Region = {
           const y = -8 - r() * 70
           st += `M${N(x)} ${N(y)}l${N(x * 0.08)} ${N(-14 - r() * 10)}`
         }
-        s += P('ln-sw', st + 'M-64 2l-12 4M60 1l13 5M-44 4l-8 6M30 5l9 6') + P('m3', 'M18 2q18-2 36-14q4 8 0 14q-18 4-36 2z', O(0.55))
+        s += P('ln-sw', `${st}M-64 2l-12 4M60 1l13 5M-44 4l-8 6M30 5l9 6`) + P('m3', 'M18 2q18-2 36-14q4 8 0 14q-18 4-36 2z', O(0.55))
       }
       s += P('b3', 'M-2-140h4v34h-4z') + P('d1', 'M-12-110q12-12 24 0q-12 6-24 0z')
       if (snow) s += P('w3', 'M-14-112q14-10 28 0q14 16 22 30q-30-8-72 0q8-14 22-30z', O(0.92))
@@ -858,11 +844,9 @@ export const region: Region = {
     }
 
     // ── bụi chuối & luỹ tre phải (diều mắc ngọn)
-    {
-      add(3305, 3475, 6, G(3385, gy(3385) + 4, banana()))
-      add(3360, 3600, 5, sway('sw1 ln-eg', UT('cl', 3446, 776, 1.06)) + (lite ? '' : sway('sw2 ln-eg', UT('cl', 3556, 772, 0.92, true))))
-      if (dark && (S === 'ha' || S === 'xuan')) spots.push({ kind: 'fireflies', layer: 3, x: 3440, y: 720, s: 1, w: 160 })
-    }
+    add(3305, 3475, 6, G(3385, gy(3385) + 4, banana()))
+    add(3360, 3600, 5, sway('sw1 ln-eg', UT('cl', 3446, 776, 1.06)) + (lite ? '' : sway('sw2 ln-eg', UT('cl', 3556, 772, 0.92, true))))
+    if (dark && (S === 'ha' || S === 'xuan')) spots.push({ kind: 'fireflies', layer: 3, x: 3440, y: 720, s: 1, w: 160 })
 
     // ── tiền cảnh (lớp 4): khóm cỏ lau lớn
     //    #ln-la tĩnh; .sw3 bọc ngoài từng <use>. Bản lật: lớp lắc nằm TRONG phép lật (trục & chiều lắc như khi còn ở trong #ln-la)

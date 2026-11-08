@@ -30,7 +30,7 @@ function J(v: number[]): string {
   let s = ''
   for (const x of v) {
     const t = String(R(x) || 0)
-    s += s && t[0] !== '-' ? ' ' + t : t
+    s += s && t[0] !== '-' ? ` ${t}` : t
   }
   return s
 }
@@ -117,10 +117,9 @@ function humps(x: number, y: number, w: number, h: number, n: number, r: () => n
     const ww = (w / n) * (0.7 + r() * 0.6)
     d += `q${J([ww / 2, -h * (1.2 + r() * 1.2), ww, 0])}`
   }
-  return d + 'z'
+  return `${d}z`
 }
 
-const lerpP = (a: Pt, b: Pt, t: number): Pt => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]
 const stop = (o: number, v: string, op: number) => `<stop offset="${o}" style="stop-color:var(--${v})" stop-opacity="${op}"/>`
 const tr = (x: number, y: number, extra = '') => `transform="translate(${R(x)} ${R(y)})${extra}"`
 const E = (cls: string, d: string, at = '') => `<path class="${cls}"${at} d="${d}"/>`
@@ -179,7 +178,6 @@ function build(ctx: Ctx): BuildOut {
   const rim = gold && side > 0
   const rough = clamp((dong ? 1.5 : 1) * (0.7 + wind * 0.9) * (pr === 'mua-to' ? 1.35 : 1) * (storm ? 1.2 : 1), 0.5, 2.4)
   const boat = fog < 0.55 && !storm && rough < 1.8
-  const amp = 4 * rough ** 1.6 // biên độ sóng: ≥4 khi rough=1, ≥12 khi rough≥2
   const rnd = (k: string) => ctx.rng(`vh-${k}`)
   const dl = (p: number, k: string) => `animation-delay:${ctx.ph(p, `vh-${k}`)}`
   // tham số chuyển động (chu kỳ, quãng trôi, pha liền mạch) gom vào CSS: mỗi phần tử chỉ mang một lớp ngắn
@@ -200,7 +198,6 @@ function build(ctx: Ctx): BuildOut {
     pieces.push(glow ? { layer, x0, x1, prio, svg, glow } : { layer, x0, x1, prio, svg })
   const use = (id: string, cls: string, x: number, y: number, k = 1) => `<use href="#vh-${id}"${cls ? ` class="${cls}"` : ''} ${k === 1 ? `x="${R(x)}" y="${R(y)}"` : tr(x, y, ` scale(${n2(k)})`)}/>`
   const flower = se === 'xuan' ? 'f1' : se === 'ha' ? 'f2' : se === 'thu' ? 'f1' : 'f3'
-  const bloom = se === 'xuan' || se === 'ha'
   // cột phản chiếu nằm dưới mặt trời/trăng trên MÀN HÌNH khi camera ngắm cảnh hải đăng (cx 16840, z .92). Lõi không còn biến
   // --cx/--z (camera = transform từng lớp, rẻ hơn nhiều), nên ghim theo vị trí cảnh; camera trôi ±50 thì cột lệch theo, không đáng kể.
   const follow = (f: number, dx: number) => `style="transform:translateX(${R(SHX * f + dx / 0.92)}px)"`
@@ -216,7 +213,9 @@ function build(ctx: Ctx): BuildOut {
   const TH = [38, 42, 46, 50, 66]
   const lines: number[][] = [XS.map(x => 662 + (x - 16900) * 0.1 + fbm(nz, x / 300, 0.5, 2) * 30)]
   // mỗi tầng một độ nghiêng riêng (dày dần / vát mỏng về một phía) → không còn là các đường kẻ song song
-  TH.forEach((t, k) => lines.push(XS.map((x, i) => ((lines[k] as number[])[i] as number) + Math.max(1.5, t * (1 + (k === 4 ? 0.8 : 1.6) * fbm(nz, x / 260 + k * 3.7, k + 1.5, 2)) + (x - 16900) * (k % 2 ? 0.05 : -0.035)))))
+  TH.forEach((t, k) => {
+    lines.push(XS.map((x, i) => ((lines[k] as number[])[i] as number) + Math.max(1.5, t * (1 + (k === 4 ? 0.8 : 1.6) * fbm(nz, x / 260 + k * 3.7, k + 1.5, 2)) + (x - 16900) * (k % 2 ? 0.05 : -0.035))))
+  })
   const lineY = (k: number, x: number) => {
     const ln = lines[k] as number[]
     const i = clamp(Math.floor((x - 16500) / 116), 0, ln.length - 2)
@@ -288,7 +287,7 @@ function build(ctx: Ctx): BuildOut {
       const [c, o] = BAND[k] as [string, number]
       s += `<g class="${c}"${o < 1 ? ` opacity="${n2(o)}"` : ''}><path id="vh-b${k}" d="${P(XS.map((x, i) => L([x, ln[i] as number])), false)}V600H0z"/></g>`
     })
-    s += `<path fill="url(#vh-lt)" d="M40 0H920V540H40z"/>` + (det ? `<path fill="url(#vh-gr)" d="M40 0H920V262H40z"/>` : '')
+    s += `<path fill="url(#vh-lt)" d="M40 0H920V540H40z"/>${det ? `<path fill="url(#vh-gr)" d="M40 0H920V262H40z"/>` : ''}`
     // mặt vỡ đứng: vài tấm đá lớn nghiêng khác nhau (mặt khuất tối, mặt đón nắng sáng) — vân khối, tương phản thấp
     {
       let fs = ''
@@ -307,7 +306,7 @@ function build(ctx: Ctx): BuildOut {
     }
     const U = (ks: number[]) => ks.filter(k => !lite || !(k % 2)).map(k => `<use href="#vh-b${k}"/>`).join('')
     // gờ: tầng trên nhô ra → bóng đổ xuống tầng dưới; tầng dưới nhô ra → mặt gờ bắt sáng (chiều tà: ánh cam hắt từ biển)
-    s += (det ? `<g class="vhk vh6 vhO3" ${tr(0, 5)}>${U([1, 3])}</g>` : '') + `<g class="vhq vhO3">${U([2, 3])}</g>`
+    s += `${det ? `<g class="vhk vh6 vhO3" ${tr(0, 5)}>${U([1, 3])}</g>` : ''}<g class="vhq vhO3">${U([2, 3])}</g>`
     s += `<g class="${rim ? 'vho vh2' : 'vhs vh1'}" opacity="${rim ? '.6' : '.42'}" ${tr(0, 1.5)}>${U([0, 2, 3, 5])}</g>`
     // mặt hướng biển: dải tối (sáng: khuất nắng) hoặc sáng (chiều: đón nắng), bám đúng silhouette
     s += (det ? `<use href="#vh-rkp" class="${side > 0 ? 'vhs' : 'vhk'}" stroke-width="44" opacity=".16"/>` : '') + (rim ? `<use href="#vh-rkp" class="vho vh3" opacity=".55"/>` : '')
@@ -347,7 +346,7 @@ function build(ctx: Ctx): BuildOut {
     for (let x = 16600; x <= 17460; x += 123) tz.push(L([x, SEA - 21 + nz(x / 23, 7) * 8]))
     s += E('k2', `${P(tz, false)}V262H100z`, ' opacity=".26"')
     if (fine) s += E('vhs', 'M200 254H940', ' stroke-width="2" stroke-dasharray="0 5 0 9 0 23 0 4 0 31 0 13" opacity=".4"') + E('vhu vhB', 'M160 260H940', ' stroke-width="9" stroke-dasharray="1.5 7 2.5 12 1 5" opacity=".8"')
-    if (ctx.wet > 0.1) s += E('k1', 'M40 0H920V262H40z', ` opacity="${n2(ctx.wet * 0.14)}"`) + `<g class="vhw vh1" opacity="${n2(ctx.wet * 0.4)}" ${tr(0, 2)}>${U([0, 2, 3])}</g>`
+    if (ctx.wet > 0.1) s += `${E('k1', 'M40 0H920V262H40z', ` opacity="${n2(ctx.wet * 0.14)}"`)}<g class="vhw vh1" opacity="${n2(ctx.wet * 0.4)}" ${tr(0, 2)}>${U([0, 2, 3])}</g>`
     if (snow) s += `<g class="vhw vh3" opacity=".85" ${tr(0, 1)}>${U([0, 3, 5])}</g>`
     else if (frost && det) s += `<g class="vhw vh1" opacity=".5" ${tr(0, 1)}>${U([0, 2, 3])}</g>`
     if (fog > 0.3) s += `<path style="fill:var(--haze)" opacity="${n2(fog * 0.32)}" d="M40 0H920V300H40z"/>`
@@ -504,21 +503,21 @@ function build(ctx: Ctx): BuildOut {
     let s = ''
     let g = ''
     // kè đá nâng nền nhà, bậc đá xuống lối mòn, rêu bám mép kè
-    s += `<g class="s3"><path id="vh-kw" d="${P([[-14, gy(-14) + 8], [-14, 2], [164, 2], [164, gy(164) + 8]])}"/></g><use href="#vh-kw" fill="url(#vh-sj)"/>` + E('s2', `M-18 0h186v4H-18zM-14 3h-8v12h-8v12h-8v12h-8v${gy(-46) - 36}h32zM52 4h34v4H52z`)
+    s += `<g class="s3"><path id="vh-kw" d="${P([[-14, gy(-14) + 8], [-14, 2], [164, 2], [164, gy(164) + 8]])}"/></g><use href="#vh-kw" fill="url(#vh-sj)"/>${E('s2', `M-18 0h186v4H-18zM-14 3h-8v12h-8v12h-8v12h-8v${gy(-46) - 36}h32zM52 4h34v4H52z`)}`
     s += E('g2', humps(-40, gy(0) + 8, 76, 5, 3, r) + humps(110, gy(130) + 8, 60, 4, 2, r))
     if (mossy) s += E(moss, humps(-14, 3, 60, 2.5, 3, r) + humps(90, 3, 70, 2, 3, r))
     // tường vôi vàng, ẩm chân tường, bóng mái hiên
     s += E('w1', 'M0-66h146V0H0z') + E('m3 vhO3', 'M0 0v-9q20-5 40 0t40-2t46 3V0z') + E('sh', 'M0-66h146v8H0z')
     // cửa sổ cánh xanh ngọc ×2, bậu hoa
-    s += `<use href="#vh-wn" x="14"/><use href="#vh-wn" x="90"/>` + E('r2', 'M11-23h28v5H11z')
+    s += `<use href="#vh-wn" x="14"/><use href="#vh-wn" x="90"/>${E('r2', 'M11-23h28v5H11z')}`
     if (!dong && fine) s += E('vhf vh4', 'M14-25h22', ' stroke-dasharray="0 5 0 3"')
     if (night) g += `<use href="#vh-wg" x="14"/><use href="#vh-wg" x="90"/>`
     // cửa gỗ hé mở, bậc đá, phao cứu sinh, đèn hiên
     s += E('b1', 'M57 0v-42h24V0z') + E('b2', 'M64 0v-40h16V0z') 
-    if (night) g += E('e1', 'M58 0v-40h6V0z') + `<path fill="url(#gw)" d="M44 4l12-46h10l12 46z"/>` + (det ? E('e1', 'M85-43h5v-6h-5z') + `<circle cx="87" cy="-46" r="22" fill="url(#gw)"/>` : '')
-    if (det) s += `<circle class="vht vh4" cx="131" cy="-33" r="7"/><circle class="vhp vh4 vhB" stroke-dasharray="5.5 5.5" cx="131" cy="-33" r="7"/>` + E('k2', 'M84-42h7l-1-8h-5z')
+    if (night) g += `${E('e1', 'M58 0v-40h6V0z')}<path fill="url(#gw)" d="M44 4l12-46h10l12 46z"/>${det ? `${E('e1', 'M85-43h5v-6h-5z')}<circle cx="87" cy="-46" r="22" fill="url(#gw)"/>` : ''}`
+    if (det) s += `<circle class="vht vh4" cx="131" cy="-33" r="7"/><circle class="vhp vh4 vhB" stroke-dasharray="5.5 5.5" cx="131" cy="-33" r="7"/>${E('k2', 'M84-42h7l-1-8h-5z')}`
     // mái ngói âm dương (hàng ngói lợp so le), nóc võng nhẹ, đầu đao cong; vài viên vỡ; rêu đọng hàng dưới & quanh ống khói
-    s += `<g class="r1"><path id="vh-rf" d="M-18-60q6-9 32-48q60 4 118 0q26 39 32 48z"/></g>` + (det ? `<use href="#vh-rf" fill="url(#vh-tl)"/>${E('r3', 'M-18-60l5-7h162l5 7z', ' opacity=".7"')}` : '')
+    s += `<g class="r1"><path id="vh-rf" d="M-18-60q6-9 32-48q60 4 118 0q26 39 32 48z"/></g>${det ? `<use href="#vh-rf" fill="url(#vh-tl)"/>${E('r3', 'M-18-60l5-7h162l5 7z', ' opacity=".7"')}` : ''}`
     if (det) s += E('r2', 'M38-94h8l-1 4h-8zM96-80h7v4h-8zM120-100h6v3h-6z')
     s += E('vhr', 'M0-118q4 9 14 9q60 3 118 0q10 0 14-9', ' stroke-width="5"')
     s += E('s3', 'M112-104v-26h13v26z') + E('s4', 'M109-129h19v-5h-19z')
@@ -530,7 +529,7 @@ function build(ctx: Ctx): BuildOut {
   // ═════════ 8. Hải đăng (tiêu điểm; gốc toạ độ: chân tháp LX/LB) ═════════
   {
     const hw = (y: number) => 23 + ((y + 230) * 11) / 214
-    let s = `<ellipse class="ao" cy="2" rx="64" ry="6"/>` + E('s2', 'M-44 2l4-18h80l4 18z') + E(side > 0 ? 'sh' : 'hl', 'M-40-16h80v4h-80z')
+    let s = `<ellipse class="ao" cy="2" rx="64" ry="6"/>${E('s2', 'M-44 2l4-18h80l4 18z')}${E(side > 0 ? 'sh' : 'hl', 'M-40-16h80v4h-80z')}`
     // tháp xây gạch trát vôi trắng đã ngả vàng (kiểu hải đăng Đông Dương cũ): chân ố vàng & ẩm, hàng đá mờ, vệt gỉ chảy từ
     // ban công, mũ đèn bằng sắt sẫm; khối trụ 3 sắc độ đổi phía theo nắng
     s += `<g class="w3"><path id="vh-tw" d="M-34-16l11-214h46l11 214z"/></g><use href="#vh-tw" fill="url(#vh-tb)"/>`
@@ -549,9 +548,9 @@ function build(ctx: Ctx): BuildOut {
     s += E('vhq vh1', 'M-37-254h74')
     if (det) s += E('vhq vhB', 'M-36-246h72', ' stroke-width="16" stroke-dasharray="1.4 5"')
     s += E('a1', 'M-19-248v-30h38v30z')
-    if (det && !night) s += E('x2', 'M-9-251q-4-11 0-22h18q4 11 0 22z') + `<g class="tw vh-fr ${A(12, 'fr')}">${E('vhs', 'M-9-256h18M-11-262h22M-9-268h18', ' stroke-width="1.2"')}</g>`
+    if (det && !night) s += `${E('x2', 'M-9-251q-4-11 0-22h18q4 11 0 22z')}<g class="tw vh-fr ${A(12, 'fr')}">${E('vhs', 'M-9-256h18M-11-262h22M-9-268h18', ' stroke-width="1.2"')}</g>`
     s += E('e1', 'M-5-257h10v-11H-5z', lamp ? '' : ' opacity=".35"') + E('vhq vhB', 'M-19-263h38', ' stroke-width="30" stroke-dasharray="1.5 8.5"')
-    if (det) s += E('hl', 'M-16-250l10-26h5l-10 26zM-16-280q8-18 20-21q-14 8-16 21z') + `<circle class="k2" cy="-304" r="3.4"/>` + E('vhq', 'M0-307v-14M-8-318h16', ' stroke-width="1.2"')
+    if (det) s += `${E('hl', 'M-16-250l10-26h5l-10 26zM-16-280q8-18 20-21q-14 8-16 21z')}<circle class="k2" cy="-304" r="3.4"/>${E('vhq', 'M0-307v-14M-8-318h16', ' stroke-width="1.2"')}`
     // ngày: một lớp hơi trời mỏng phủ tháp → trắng hoà vào trời, không thành đốm sáng chói giữa khung; sương: dày hơn
     const tv = night ? fog * 0.3 : Math.max(0.14, fog * 0.3)
     if (tv > 0.05) s += `<use href="#vh-tw" style="fill:var(--haze)" opacity="${n2(tv)}"/>`
@@ -579,7 +578,7 @@ function build(ctx: Ctx): BuildOut {
       t += humps(x - w / 2, y + 4, w, 5, 4, r)
       u += humps(x - w / 2 + 3, y + 1, w * 0.82, 4.5, 3, r)
     }
-    const s = E('vhb', 'M0 2q2-16 16-24t26-16q12-8 18-20M17-22q-10-8-8-22M40-38q8 2 14 8', ' stroke-width="5"') + `<g class="sw1">${E('m3', t)}${det || snow ? E(snow ? 'w3' : moss, u) : ''}</g>`
+    const s = `${E('vhb', 'M0 2q2-16 16-24t26-16q12-8 18-20M17-22q-10-8-8-22M40-38q8 2 14 8', ' stroke-width="5"')}<g class="sw1">${E('m3', t)}${det || snow ? E(snow ? 'w3' : moss, u) : ''}</g>`
     add(3, 17250, 17330, 6, `<g ${tr(17262, 612)}>${s}</g>`)
   }
 
@@ -598,20 +597,20 @@ function build(ctx: Ctx): BuildOut {
       const hx = R(dx / n)
       const vy = R(dy / n)
       // đoạn thứ hai: vài bậc gãy/mất
-      prof += (i === 1 ? `M${J([a[0] + hx * 3, a[1] + vy * 3])}${`h${hx}v${vy}`.repeat(n - 3)}` : `M${J(a)}${`h${hx}v${vy}`.repeat(n)}`) + `h${dx - hx * n}v${dy - vy * n}`
+      prof += `${i === 1 ? `M${J([a[0] + hx * 3, a[1] + vy * 3])}${`h${hx}v${vy}`.repeat(n - 3)}` : `M${J(a)}${`h${hx}v${vy}`.repeat(n)}`}h${dx - hx * n}v${dy - vy * n}`
       line += P([a, b], false)
       if (i > 0) {
         pad += `M${J([a[0] - 12, a[1]])}h24v4h-24z`
       }
     })
-    let s = `<g class="vhk vhO2" stroke-width="5" ${tr(4, 7)}><path id="vh-sr" d="${line}"/></g><use href="#vh-sr" class="vhb" stroke-width="3" y="3" opacity=".5"/>` + E('vhc vh2', prof, ' opacity=".45"')
+    let s = `<g class="vhk vhO2" stroke-width="5" ${tr(4, 7)}><path id="vh-sr" d="${line}"/></g><use href="#vh-sr" class="vhb" stroke-width="3" y="3" opacity=".5"/>${E('vhc vh2', prof, ' opacity=".45"')}`
     s += E('b2', pad, ' opacity=".7"')
     if (mossy) s += E(moss, humps(17286, 850, 32, 2.2, 4, r))
-    if (snow && det) s += `<use href="#vh-sr" class="vhw" stroke-width="2.4" y="-3"/>` + E('w3', pad.replace(/h24v4h-24z/g, 'h24v-3h-24z'))
+    if (snow && det) s += `<use href="#vh-sr" class="vhw" stroke-width="2.4" y="-3"/>${E('w3', pad.replace(/h24v4h-24z/g, 'h24v-3h-24z'))}`
     // đèn trên chiếu nghỉ giữa
     const [lx, ly] = T[2] as Pt
     s += E('vhb vh2', `M${lx + 8} ${ly}v-26h6`) + E('k2', `M${lx + 11} ${ly - 18}h7l-1-7h-5z`)
-    add(3, 17150, 17340, 7, s, night ? E('e1', `M${lx + 12} ${ly - 20}h5v-5h-5z`) + `<circle cx="${lx + 14}" cy="${ly - 22}" r="26" fill="url(#gw)"/>` : '')
+    add(3, 17150, 17340, 7, s, night ? `${E('e1', `M${lx + 12} ${ly - 20}h5v-5h-5z`)}<circle cx="${lx + 14}" cy="${ly - 22}" r="26" fill="url(#gw)"/>` : '')
   }
 
   // ═════════ 11. Bến nhỏ: cọc gỗ, thùng, cuộn dây, thúng chai úp, lưới phơi; vòm đá có cua, vũng nước triều ═════════

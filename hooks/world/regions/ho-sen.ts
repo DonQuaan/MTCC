@@ -21,7 +21,7 @@ function J(a: readonly number[]): string {
   let o = ''
   for (const v of a) {
     const r = R(v)
-    o += o !== '' && r >= 0 ? ' ' + r : String(r)
+    o += o !== '' && r >= 0 ? ` ${r}` : String(r)
   }
   return o
 }
@@ -44,7 +44,7 @@ function mn(d: string): string {
     let o = ''
     for (const v of a) {
       const t = o2(v)
-      o += o !== '' && t[0] !== '-' ? ' ' + t : t
+      o += o !== '' && t[0] !== '-' ? ` ${t}` : t
     }
     return o
   }
@@ -76,7 +76,7 @@ function mn(d: string): string {
     const useRel = B.length <= A.length
     const L = useRel ? lc : lc.toUpperCase()
     const body = useRel ? B : A
-    out += L === last && lc !== 'm' ? (body[0] === '-' ? body : ' ' + body) : L + body
+    out += L === last && lc !== 'm' ? (body[0] === '-' ? body : ` ${body}`) : L + body
     last = L
     if (lc === 'h') x = abs[0] ?? x
     else if (lc === 'v') y = abs[0] ?? y
@@ -104,7 +104,7 @@ function rl(pts: Pt[], z = false): string {
     const b = P[i] as Pt
     rel.push(b[0] - a[0], b[1] - a[1])
   }
-  return 'M' + J(f) + (rel.length ? 'l' + J(rel) : '') + (z ? 'z' : '')
+  return `M${J(f)}${rel.length ? `l${J(rel)}` : ''}${z ? 'z' : ''}`
 }
 
 /** Cong mượt qua điểm (Q qua trung điểm), toạ độ tương đối. */
@@ -123,7 +123,7 @@ function rq(pts: Pt[], z = false): string {
     c = m
   }
   const L = P[P.length - 1] as Pt
-  return 'M' + J(f) + 'q' + J(q) + 'l' + J([L[0] - c[0], L[1] - c[1]]) + (z ? 'z' : '')
+  return `M${J(f)}q${J(q)}l${J([L[0] - c[0], L[1] - c[1]])}${z ? 'z' : ''}`
 }
 
 /** Điểm trên đường cong bậc hai. */
@@ -301,7 +301,7 @@ function build(ctx: Ctx) {
     for (let x = 7400; x < 8800; x += x > 7640 && x < 8170 ? (lite ? 44 : 30) : lite ? 20 : 13) xs.push(x)
     xs.push(8800)
     // hai đầu rặng cây vuốt thoải xuống mặt nước (không còn mép đứng)
-    const can = rl(xs.map(x => [x, 812 - (812 - yT(x)) * Math.min(1, (x - 7392) / 70)] as Pt)) + 'V813H7400z'
+    const can = `${rl(xs.map(x => [x, 812 - (812 - yT(x)) * Math.min(1, (x - 7392) / 70)] as Pt))}V813H7400z`
     const sp: Pt[] = []
     for (let x = 7400; x <= 8800; x += 50) sp.push([x, yB(x)])
     const hzO = Math.min(1, 0.72 + ctx.cur.fog * 0.3 + (xuan && hF < 10 ? 0.18 : 0) + (dong ? 0.12 : 0))
@@ -316,10 +316,10 @@ function build(ctx: Ctx) {
       }, 0) * Math.max(0, Math.min(1, (x - 7382) / 60))
     const tb: Pt[] = []
     for (let x = 7380; x <= 8000; x += lite ? 16 : 8) tb.push([x, 812 - tre(x) - (tre(x) > 6 ? 3 * fbm(nb, x / 7, 6.1, 2) + 1.5 : 0)])
-    defs += `<path id="hs-cn" d="${mn(can)}"/><path id="hs-tb" d="${mn(rl(tb) + 'V813H7380z')}"/>` +
+    defs += `<path id="hs-cn" d="${mn(can)}"/><path id="hs-tb" d="${mn(`${rl(tb)}V813H7380z`)}"/>` +
       `<linearGradient id="hs-hb" gradientUnits="userSpaceOnUse" x1="0" y1="722" x2="0" y2="812"><stop offset="0" style="stop-color:var(--haze)" stop-opacity="${o2(Math.min(0.9, 0.5 + ctx.cur.fog * 0.3))}"/><stop offset="1" style="stop-color:var(--haze)" stop-opacity=".94"/></linearGradient>`
     // sương chỉ phủ trong bóng rặng cây (dùng lại chính path) → không có mép chữ nhật
-    const fb = `<g id="hs-fb"><use href="#hs-tb" class="l4"/><use href="#hs-tb" fill="url(#hs-hb)"/><use href="#hs-cn" class="l4"/>${P('g3', rq(sp) + 'V813H7400z')}${P('a1', 'M8372 813q48-10 96 0z')}<use href="#hs-cn" fill="url(#hs-hz)"${op(hzO)}/></g>`
+    const fb = `<g id="hs-fb"><use href="#hs-tb" class="l4"/><use href="#hs-tb" fill="url(#hs-hb)"/><use href="#hs-cn" class="l4"/>${P('g3', `${rq(sp)}V813H7400z`)}${P('a1', 'M8372 813q48-10 96 0z')}<use href="#hs-cn" fill="url(#hs-hz)"${op(hzO)}/></g>`
     defs += fb
     objs.push({ x0: 7378, x1: 8810, prio: 7, z: 811, svg: `<use href="#hs-fb"/>` })
     refl.push({ x0: 7378, x1: 8810, prio: 7, svg: MIR("hs-fb", WL, 0.72 * reflO) })
@@ -402,12 +402,12 @@ function build(ctx: Ctx) {
       D(P('m2', 'M-6-71q6-4 12 0l-2 4q-4-2-8 0z')) +
       D(S('hs-g2', 1.2, 'M-160-8l-3-9M-154-8l1-10M-147-8l4-8M156-8l3-9M149-8l-2-10')) +
       (wetAny ? P('wetsheen', 'M-150-18Q0-188 150-18l0-4Q0-192-150-22z') : '') +
-      (snow ? P('w3', cap(top(-160, 160, 16).map(([x, y]) => [x, y - 2] as Pt), 6) + 'M-160 2h26v-5h-26zM134 2h26v-5h-26zM-66 0q4-5 10-4l-2 4zM56-4q6-1 10 4h-8z') : '') +
+      (snow ? P('w3', `${cap(top(-160, 160, 16).map(([x, y]) => [x, y - 2] as Pt), 6)}M-160 2h26v-5h-26zM134 2h26v-5h-26zM-66 0q4-5 10-4l-2 4zM56-4q6-1 10 4h-8z`) : '') +
       (dim > 0.02 ? `<use href="#hs-bb" class="k1"${op(0.52 * dim)}/>` : '') +
       `</g>`
     defs += br
     objs.push({ x0: BX - 162, x1: BX + 162, prio: 9, z: 812, svg: `<use href="#hs-br"/>` })
-    refl.push({ x0: BX - 162, x1: BX + 162, prio: 8, svg: MIR('hs-br', WL, 0.62 * reflO) + `<use href="#hs-bb" class="sh" transform="matrix(1 0 0 -1 ${BX} 812)"/>` })
+    refl.push({ x0: BX - 162, x1: BX + 162, prio: 8, svg: `${MIR('hs-br', WL, 0.62 * reflO)}<use href="#hs-bb" class="sh" transform="matrix(1 0 0 -1 ${BX} 812)"/>` })
     // đèn đá đầu cầu dưới gốc liễu: ai đó vẫn thắp mỗi tối — nguồn sáng ấm ở rìa phải, ngoài cột giữa
     const LX = 8604
     const lit = night
@@ -479,7 +479,7 @@ function build(ctx: Ctx) {
       let bt = ''
       const seg = (c: Pt, e: Pt) => {
         const E: Pt = [R(e[0]), R(e[1])]
-        bt += 'q' + J([R(c[0]) - cur[0], R(c[1]) - cur[1], E[0] - cur[0], E[1] - cur[1]])
+        bt += `q${J([R(c[0]) - cur[0], R(c[1]) - cur[1], E[0] - cur[0], E[1] - cur[1]])}`
         cur = E
       }
       const nT = lite ? 10 : 15
@@ -493,7 +493,7 @@ function build(ctx: Ctx) {
         seg([cur[0] + (tip[0] - cur[0]) * 0.15, cur[1] + (tip[1] - cur[1]) * 0.75], tip)
         seg([nb[0] - (nb[0] - tip[0]) * 0.15, nb[1] + (tip[1] - nb[1]) * 0.7], nb)
       }
-      return rq(tp) + bt + 'z'
+      return `${rq(tp) + bt}z`
     }
     // tán thưa (xuân, thu): lỗ thủng dựng từ nhiễu để trời/nắng xuyên qua (evenodd), không còn tấm thảm đặc
     let hole = ''
@@ -562,7 +562,7 @@ function build(ctx: Ctx) {
       S('hs-n1', 2.6, ld(LB[1] as [Pt, Pt, Pt]) + ld(LB[3] as [Pt, Pt, Pt])) +
       (dong || xuan ? S('hs-n1', 1.2, 'M-120-226q-12-16-26-20M-160-214q-8-18-24-22M-80-250q4-16 16-24M10-238q8-14 22-18M-110-156q-6-14-18-18') : '') +
       P(yc[0] ?? 'l4', back, (hole ? ' fill-rule="evenodd"' : '') + (xuan ? op(0.75) : thu ? op(0.62) : '')) +
-      (front ? D(`<use href="#hs-wf" class="${yc[2] ?? 'l2'}" transform="${lit}" opacity=".55"/>`) + `<use href="#hs-wf" class="${yc[1] ?? 'l3'}"${xuan || thu ? op(0.82) : ''}/>` : '') +
+      (front ? `${D(`<use href="#hs-wf" class="${yc[2] ?? 'l2'}" transform="${lit}" opacity=".55"/>`)}<use href="#hs-wf" class="${yc[1] ?? 'l3'}"${xuan || thu ? op(0.82) : ''}/>` : '') +
       S('hs-q4', 2.2, tex, op(0.45)) +
       S('hs-y2', 1.2, tex2, op(0.6)) +
       (snow && !lite ? S('hs-sn', 2, 'M-40-174Q-100-242-206-210M-44-190Q-96-276-176-266M-30-156Q-6-246 52-254') : '') +
@@ -596,16 +596,16 @@ function build(ctx: Ctx) {
     let rod = ''
     if (heavy) {
       man = torso + head
-      rod = S('hs-n3', 1.8, 'M-10-28C40-60 100-74 150-66') + `<path class="hs-ln" d="M150-66Q153-50 154-30"/>`
+      rod = `${S('hs-n3', 1.8, 'M-10-28C40-60 100-74 150-66')}<path class="hs-ln" d="M150-66Q153-50 154-30"/>`
     } else if (shower) {
       man = torso + arm(-16, -48) + head
-      rod = S('hs-n3', 1.8, 'M-24-30C-16-80-20-118-34-152') + `<path class="hs-ln" d="M-34-152q6 16 3 36"/>`
+      rod = `${S('hs-n3', 1.8, 'M-24-30C-16-80-20-118-34-152')}<path class="hs-ln" d="M-34-152q6 16 3 36"/>`
     } else if (sleep) {
-      man = torso + `<g transform="rotate(22 -42 -56)">${head}</g>`
-      rod = S('hs-n3', 1.8, 'M-24-26C30-56 92-68 150-58') + `<path class="hs-ln" d="M150-58Q152-44 153-30"/>`
+      man = `${torso}<g transform="rotate(22 -42 -56)">${head}</g>`
+      rod = `${S('hs-n3', 1.8, 'M-24-26C30-56 92-68 150-58')}<path class="hs-ln" d="M150-58Q152-44 153-30"/>`
     } else {
       man = torso + arm(-12, -42) + head
-      rod = S('hs-n3', 1.8, 'M-24-30C30-84 100-106 152-94') + `<path class="hs-ln" d="M152-94Q155-62 156-30"/>`
+      rod = `${S('hs-n3', 1.8, 'M-24-30C30-84 100-106 152-94')}<path class="hs-ln" d="M152-94Q155-62 156-30"/>`
     }
     const bt =
       `<g id="hs-bt">` +
@@ -637,7 +637,7 @@ function build(ctx: Ctx) {
     refl.push({ x0: BX - 140, x1: BX + 140, prio: 7, svg: `<g transform="${MIRT(wl, BS, BX, BY)}"><g class="bob"><use href="#hs-bt"${op(0.45 * reflO)}/><path class="sh" d="${mn(sil)}"/></g></g>` })
     objs.push({
       x0: BX - 140, x1: BX + 140, prio: 8, z: 888,
-      svg: `<ellipse class="ao" cx="${BX}" cy="${R(wl + 1)}" rx="104" ry="3"/><g transform="matrix(${BS} 0 0 ${BS} ${BX} ${BY})"><g class="bob"><use href="#hs-bt"/></g></g>` + (heavy || shower ? '' : `<ellipse class="z3 rip" cx="${R(BX + 156 * BS)}" cy="${R(BY - 26 * BS)}" rx="11" ry="2.4"/>`),
+      svg: `<ellipse class="ao" cx="${BX}" cy="${R(wl + 1)}" rx="104" ry="3"/><g transform="matrix(${BS} 0 0 ${BS} ${BX} ${BY})"><g class="bob"><use href="#hs-bt"/></g></g>${heavy || shower ? '' : `<ellipse class="z3 rip" cx="${R(BX + 156 * BS)}" cy="${R(BY - 26 * BS)}" rx="11" ry="2.4"/>`}`,
       glow,
     })
   }
@@ -675,11 +675,11 @@ function build(ctx: Ctx) {
       rl2 += rl([...lt, ...lt.slice().reverse().map(([x, y]) => [x + (cx - x) * 0.3, y + h * 0.16] as Pt)], true)
       rm += cap(top.slice(1, 6).filter((_, j) => j !== 1), 2 + w * 0.1)
     }
-    defs += `<path id="hs-lb" d="${mn(rl(tp) + rq(sh).replace('M', 'L') + 'H7120Q7150 900 7184 ' + R(tp[0]?.[1] ?? 680) + 'z')}"/>`
+    defs += `<path id="hs-lb" d="${mn(`${rl(tp) + rq(sh).replace('M', 'L')}H7120Q7150 900 7184 ${R(tp[0]?.[1] ?? 680)}z`)}"/>`
     // ba sắc độ theo độ dốc: vai bờ thoải hứng sáng trời (sáng) · sườn (thân) · chân bờ dốc sát nước (tối)
     const crestB = tp.filter(p => p[0] < 7384 && p[0] % 3 < 1.5)
-    const shoulder = rq(crestB) + rl(crestB.slice().reverse().map(([x, y]) => [x - 6, y + 22 + 16 * (fbm(nl, x / 30, 3.3, 2) + 0.5) + (x - 7184) * 0.06] as Pt)).replace('M', 'L') + 'z'
-    const band = rq(sh) + rq(sh.slice().reverse().map(([x, y]) => [x - 16 - (y - 812) * 0.14 - 26 * (fbm(nl, y / 45, 9, 2) + 0.4), y] as Pt)).replace('M', 'L') + 'z'
+    const shoulder = `${rq(crestB) + rl(crestB.slice().reverse().map(([x, y]) => [x - 6, y + 22 + 16 * (fbm(nl, x / 30, 3.3, 2) + 0.5) + (x - 7184) * 0.06] as Pt)).replace('M', 'L')}z`
+    const band = `${rq(sh) + rq(sh.slice().reverse().map(([x, y]) => [x - 16 - (y - 812) * 0.14 - 26 * (fbm(nl, y / 45, 9, 2) + 0.4), y] as Pt)).replace('M', 'L')}z`
     // búi cỏ trên sườn: to dần về gần, hai sắc độ tương phản thấp
     let tuft = ''
     let tuft2 = ''
@@ -854,7 +854,7 @@ function build(ctx: Ctx) {
     const tex = (dong ? `<use href="#hs-wp" fill="url(#hs-sv)"/>` : '') + P('hs-rp', vt[0] ?? '') + P('hs-rp hs-rk', vt[1] ?? '')
     streak.push({
       x0: 7390, x1: 8830, prio: 5,
-      svg: `<g class="hs-er">${P('hs-sh', er[0] ?? '')}${P('hs-sh hs-sh2 hs-en', er[1] ?? '')}</g><use href="#hs-wp" fill="url(#hs-rv)"/>${tex}` + gl.map((d, i) => P(`hs-wt${i === 2 && day && !rain ? ' hs-t2' : ''}`, d, op(gO[i] ?? 0.2))).join(''),
+      svg: `<g class="hs-er">${P('hs-sh', er[0] ?? '')}${P('hs-sh hs-sh2 hs-en', er[1] ?? '')}</g><use href="#hs-wp" fill="url(#hs-rv)"/>${tex}${gl.map((d, i) => P(`hs-wt${i === 2 && day && !rain ? ' hs-t2' : ''}`, d, op(gO[i] ?? 0.2))).join('')}`,
     })
   }
 
@@ -889,7 +889,7 @@ function build(ctx: Ctx) {
       }
       fx.push({
         x0: mx - 60, x1: mx + 60, prio: 4, svg: '',
-        glow: `<ellipse fill="url(#gc)" cx="${R(mx)}" cy="${R((816 + yc) / 2 + 20)}" rx="30" ry="${R((yc - 816) / 2 + 50)}"${op(0.35 * mB)}/>` + S('hs-mg hs-t1', 1.5, g[0] ?? '', op(0.7 * mB)) + S('hs-mg hs-t2', 1.5, g[1] ?? '', op(0.55 * mB)),
+        glow: `<ellipse fill="url(#gc)" cx="${R(mx)}" cy="${R((816 + yc) / 2 + 20)}" rx="30" ry="${R((yc - 816) / 2 + 50)}"${op(0.35 * mB)}/>${S('hs-mg hs-t1', 1.5, g[0] ?? '', op(0.7 * mB))}${S('hs-mg hs-t2', 1.5, g[1] ?? '', op(0.55 * mB))}`,
       })
     }
   }
@@ -927,7 +927,7 @@ function build(ctx: Ctx) {
       P('l3', rib(11470, 1140, 7, -120, -30, -10) + rib(11500, 1140, 6, -136, 14, 6) + rib(11536, 1140, 7, -90, 34, 12) + rib(11566, 1140, 6, -104, -18, -8) + rib(11596, 1140, 5, -72, 20, 6), op(0.9)) +
       P('l4', rib(11486, 1140, 5, -96, 26, 8) + rib(11550, 1140, 5, -72, -22, -6)) +
       (dong ? '' : S('hs-q4', 1.6, 'M11514 1140q2-50 0-104M11440 1140q-4-40-2-88') + P('b1', 'M11510 1028q4-2 8 0v20q-4 2-8 0zM11436 1042q3-2 7 0v17q-3 2-7 0z'))
-    if (!lite || ha) fg.push({ layer: 4, x0: 11380, x1: 11640, prio: 2, svg: `<g class="sw2">${rightR}</g>` + (dong ? '' : `<g class="sw4">${S('hs-q4', 3, 'M11566 1140q4-26 0-40')}${T('hs-Q', 11560, 1096, 9, 1.7)}</g>`) })
+    if (!lite || ha) fg.push({ layer: 4, x0: 11380, x1: 11640, prio: 2, svg: `<g class="sw2">${rightR}</g>${dong ? '' : `<g class="sw4">${S('hs-q4', 3, 'M11566 1140q4-26 0-40')}${T('hs-Q', 11560, 1096, 9, 1.7)}</g>`}` })
   }
 
   // ───────────── Ghép mảnh theo thứ tự vẽ (xa → gần) ─────────────
@@ -990,7 +990,7 @@ function build(ctx: Ctx) {
       : '') +
     (wetAny
       ? `@keyframes hs-rr{from{transform:scale(.15);opacity:.85}to{transform:scale(1.3);opacity:0}}.hs-rr{transform-box:fill-box;transform-origin:50% 50%;animation:hs-rr 1.7s ease-out infinite}` +
-        [0, 1, 2, 3, 4, 5].map(i => `.hs-d${i}{animation-delay:${ctx.ph(1.7, 'hs-d' + i)}}`).join('')
+        [0, 1, 2, 3, 4, 5].map(i => `.hs-d${i}{animation-delay:${ctx.ph(1.7, `hs-d${i}`)}}`).join('')
       : '')
 
   return { pieces, spots, defs, css }

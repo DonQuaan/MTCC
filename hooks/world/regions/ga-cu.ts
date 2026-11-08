@@ -16,7 +16,7 @@ const F = (...v: number[]): string => {
   let s = ''
   v.forEach((n, i) => {
     const t = String(Math.round(n))
-    s += i > 0 && t[0] !== '-' ? ' ' + t : t
+    s += i > 0 && t[0] !== '-' ? ` ${t}` : t
   })
   return s
 }
@@ -25,23 +25,23 @@ const R = (x: number, y: number, w: number, h: number) => `M${F(x, y)}h${F(w)}v$
 const P = (pts: Pt[]): string => {
   const r = pts.map(rd)
   const d: number[] = []
-  for (let i = 1; i < r.length; i += 1) d.push(r[i]![0] - r[i - 1]![0], r[i]![1] - r[i - 1]![1])
-  return `M${F(...r[0]!)}l${F(...d)}z`
+  for (let i = 1; i < r.length; i += 1) d.push((r[i] as Pt)[0] - (r[i - 1] as Pt)[0], (r[i] as Pt)[1] - (r[i - 1] as Pt)[1])
+  return `M${F(...(r[0] as Pt))}l${F(...d)}z`
 }
 /** Đường cong mượt qua các điểm (q tương đối qua trung điểm). */
 const S = (pts: Pt[], close = false): string => {
   const r = pts.map(rd)
   if (r.length < 3) return P(r)
-  let cur = r[0]!
+  let cur = r[0] as Pt
   const nums: number[] = []
   for (let i = 1; i < r.length - 1; i += 1) {
-    const p = r[i]!
-    const m = rd([(p[0] + r[i + 1]![0]) / 2, (p[1] + r[i + 1]![1]) / 2])
+    const p = r[i] as Pt
+    const m = rd([(p[0] + (r[i + 1] as Pt)[0]) / 2, (p[1] + (r[i + 1] as Pt)[1]) / 2])
     nums.push(p[0] - cur[0], p[1] - cur[1], m[0] - cur[0], m[1] - cur[1])
     cur = m
   }
-  const last = r[r.length - 1]!
-  return `M${F(...r[0]!)}q${F(...nums)}l${F(last[0] - cur[0], last[1] - cur[1])}${close ? 'z' : ''}`
+  const last = r[r.length - 1] as Pt
+  return `M${F(...(r[0] as Pt))}q${F(...nums)}l${F(last[0] - cur[0], last[1] - cur[1])}${close ? 'z' : ''}`
 }
 const E = (cx: number, cy: number, rx: number, ry: number) =>
   `M${F(cx - rx, cy)}a${F(rx, ry)} 0 1 0 ${F(2 * rx)} 0a${F(rx, ry)} 0 1 0 ${F(-2 * rx)} 0z`
@@ -101,7 +101,7 @@ const fans = (tips: number[][], r: () => number): string => {
       const l = len * (0.75 + r() * 0.4)
       const dx = Math.round(Math.cos(a) * l)
       const dy = Math.round(Math.sin(a) * l)
-      d += `l${F(dx, dy)}` + (i < n - 1 ? `m${F(-dx, -dy)}` : '')
+      d += `l${F(dx, dy)}${i < n - 1 ? `m${F(-dx, -dy)}` : ''}`
       if (i === n - 1) {
         px = X + dx
         py = Y + dy
@@ -149,7 +149,7 @@ class Pa {
     }
     for (const sub of d.split(/(?=M)/)) {
       const mm = /^M(-?\d+) ?(-?\d+)/.exec(sub)
-      if (mm && b.z) b.d += 'm' + F(Number(mm[1]) - b.z[0], Number(mm[2]) - b.z[1]) + sub.slice(mm[0].length)
+      if (mm && b.z) b.d += `m${F(Number(mm[1]) - b.z[0], Number(mm[2]) - b.z[1])}${sub.slice(mm[0].length)}`
       else b.d += sub
       b.z = mm && sub.endsWith('z') ? [Number(mm[1]), Number(mm[2])] : null
     }
@@ -157,7 +157,8 @@ class Pa {
   }
   r(s: string): this {
     if (!s) return this
-    const key = `\u0000${(this.n += 1)}`
+    this.n += 1
+    const key = `\u0000${this.n}`
     this.m.set(key, { d: s, z: null })
     this.k.push(key)
     return this
@@ -167,25 +168,25 @@ class Pa {
     const keys = [...this.k.filter(k => k === 'ao'), ...this.k.filter(k => k !== 'ao' && !late.includes(k)), ...late.filter(k => this.m.has(k))]
     return keys
       .map(key => {
-        const b = this.m.get(key)!
+        const b = this.m.get(key) as { d: string; z: Pt | null }
         if (key[0] === '\u0000') return b.d
         const base = key.split('|')[0] as string
         let cls: string
         if (base[0] === '~') {
           const [, c = '', w = '1', o, bt] = base.split('~')
-          this.Z.add('z' + w)
+          this.Z.add(`z${w}`)
           cls = `ga-${c} ${zName(w)}`
           if (o) {
-            this.Z.add('o' + o)
-            cls += ' ' + oName(o)
+            this.Z.add(`o${o}`)
+            cls += ` ${oName(o)}`
           }
           if (bt) cls += ' ga-bt'
         } else {
           const [c = '', o] = base.split('~')
           cls = c
           if (o) {
-            this.Z.add('o' + o)
-            cls += ' ' + oName(o)
+            this.Z.add(`o${o}`)
+            cls += ` ${oName(o)}`
           }
         }
         return `<path class="${cls}" d="${b.d}"/>`
@@ -233,14 +234,14 @@ function makeDefs(rng: (k: string) => () => number, sunL: boolean, snow: boolean
   const m: [number, number, string][] = []
   for (let i = 0; i < 13; i += 1) {
     const u = r()
-    m.push([Math.round(10 + u * u * 660), Math.round(884 + r() * 126), ['c1', 'c2', 'c3', 'c4', 'c5'][Math.floor(r() * 5)]!])
+    m.push([Math.round(10 + u * u * 660), Math.round(884 + r() * 126), ['c1', 'c2', 'c3', 'c4', 'c5'][Math.floor(r() * 5)] as string])
   }
   m.sort((p, q) => p[1] - q[1])
   // Nội dung được <use> tham chiếu phải TĨNH: khóm thứ 2 (lắc gió, sw1) và khóm đầu (vẽ trước nó) đặt tại chỗ,
   // sw1 nằm trên <g> bọc ngoài <use>; 11 khóm còn lại (vẽ sau, tĩnh) gom vào ga-mL. Giữ nguyên thứ tự vẽ.
   const mu = ([x, y, id]: [number, number, string]) => `<use href="#ga-${id}" x="${x}" y="${y}"/>`
   const meadow = `<g id="ga-mL">${m.slice(2).map(mu).join('')}</g>`
-  const mw = `${mu(m[0]!)}<g class="sw1">${mu(m[1]!)}</g><use href="#ga-mL"/>`
+  const mw = `${mu(m[0] as [number, number, string])}<g class="sw1">${mu(m[1] as [number, number, string])}</g><use href="#ga-mL"/>`
   // cụm lá đại (sứ) ở ngọn cành: lá thuôn hai đầu toả lên
   const lv = (a: number, l: number, w: number) => {
     const tx = Math.cos(a) * l
@@ -347,8 +348,14 @@ export const region: Region = {
     const md = makeDefs(ctx.rng, sunL, snow)
     const Z = new Set<string>(['z11', 'z1.3', 'z5', 'z4', 'z2.6', 'z20']) // nét dùng trong defs
     const pa = () => new Pa(Z)
-    const zc = (w: string) => (Z.add('z' + w), zName(w))
-    const oc = (o: string) => (Z.add('o' + o), oName(o))
+    const zc = (w: string) => {
+      Z.add(`z${w}`)
+      return zName(w)
+    }
+    const oc = (o: string) => {
+      Z.add(`o${o}`)
+      return oName(o)
+    }
     // độ trễ hoạt ảnh từng phần tử → CSS (liền mạch qua các lần vẽ lại)
     let css = CSS
     let nd = 0
@@ -395,7 +402,7 @@ export const region: Region = {
       const r = ctx.rng('ga-dai')
       const a = pa()
       const w = `<path class="ga-w ga-ws" d="M233 508Q100 536-20 524M249 499Q100 526-20 512M233 508Q970 614 1677 512M249 499Q970 600 1693 503M267 508Q970 612 1711 512"/>`
-      a.r((train !== undefined ? `<g class="ga-wv">${w}</g>` : w) + `<path class="ga-w" d="M254 538Q330 590 398 652M1693 524L1762 778"/>`)
+      a.r(`${train !== undefined ? `<g class="ga-wv">${w}</g>` : w}<path class="ga-w" d="M254 538Q330 590 398 652M1693 524L1762 778"/>`)
       a.p('g4', U(-20, 806, 380, 44, r, 5))
       // cây đại: thân xám, cành mọng chẻ đôi, thon dần; mặt sáng về phía nắng, rêu ở nách cành
       const L: [number, number, number, number, number, number, number][] = [
@@ -434,7 +441,7 @@ export const region: Region = {
       sg.p('k1', 'M136 638q0-4 4-4h16q4 0 4 4v38q0 4-4 4h-16q-4 0-4-4z').p('k2', 'M139 643q9-9 18 0zm0 20q9-9 18 0z').p('~k2~11', 'M148 649h0m0 20h0').p('ga-ms', MO(118, 800, 30, 7, r))
       box(sg, 122, 778, 22, 20, 4, 5)
       sg.p('hl', R(137, 636, 2, 42))
-      a.r(`<use href="#ga-pl" x="248" y="776"/>` + prop('pS', sg.s) + `<path class="ga-p1 ga-r ${zc('11')}" d="M148 649h0"/><path class="ga-e4 ga-g ${zc('11')}" d="M148 669h0"/>`)
+      a.r(`<use href="#ga-pl" x="248" y="776"/>${prop('pS', sg.s)}<path class="ga-p1 ga-r ${zc('11')}" d="M148 649h0"/><path class="ga-e4 ga-g ${zc('11')}" d="M148 669h0"/>`)
       // bụi cây sau máy bán hàng: nhiều u, đốm lá sáng không đều về phía nắng; che kín mép làng xa
       const rb = ctx.rng('ga-bui')
       const bu = pa()
@@ -443,19 +450,19 @@ export const region: Region = {
       // hai vòm cuối & thân dưới thu về ≤ 1800 ở mọi y > 760: vùng bên cạnh vẽ mặt đất (cỏ/tuyết) từ ground−2 ĐÈ lên sau
       const body = [[1530, 760, 32], [1582, 740, 52], [1642, 730, 62], [1704, 737, 55], [1758, 748, 44], [1780, 738, 30], [1600, 676, 44], [1668, 650, 52], [1732, 686, 40], [1632, 608, 34]]
       // mảng sáng hình trăng khuyết: vòm sáng lệch về phía nắng rồi khoét lại bằng vòm thân lệch ngược
-      const top = (sunL ? [6, 7, 9, 1] : [8, 7, 9, 3]).map(i => body[i]!)
+      const top = (sunL ? [6, 7, 9, 1] : [8, 7, 9, 3]).map(i => body[i] as number[])
       bu.p('l3', R(1494, 760, 264, 32) + O(body)).p('l2', O(top.map(([x = 0, y = 0, q = 0]) => [x + sx * q * 0.16, y - q * 0.16, q * 0.84])))
       bu.p('l3|c', O(top.map(([x = 0, y = 0, q = 0]) => [x - sx * q * 0.1, y + q * 0.12, q * 0.9])))
       const sp: number[][] = []
       for (let i = 0; i < 9; i += 1) sp.push([(sunL ? 1566 : 1654) + rb() * 96, 640 + rb() * 100])
       bu.p('~l2~11', D(sp.slice(0, 5))).p('~l1~7', D(sp.slice(4))).p('k1~.25', E(1652, 793, 144, 5))
-      let tu = prop('pB', bu.s) + `<use href="#ga-pl" x="1692" y="780"/>`
+      let tu = `${prop('pB', bu.s)}<use href="#ga-pl" x="1692" y="780"/>`
       for (let i = 0; i < (lite ? 2 : 4); i += 1) {
         const u = `<use href="#ga-T" x="${Math.round(1650 + i * 36 + rb() * 10)}" y="${Math.round(781 + rb() * 4)}"/>`
         tu += i ? u : `<g class="sw3">${u}</g>` // class động trên <g> bọc ngoài, không đặt thẳng lên <use>
       }
       a.r(tu)
-      if (snow) a.p('w3', tips.map(([x = 0, y = 0]) => U(x - 6, y + 2, 12, 5, r, 2)).join('') + 'M136 636q0-3 4-3h16q4 0 4 3zM121 777h24v-3h-24zM224 519h50v-4h-50z' + U(1566, 646, 96, 12, rb, 3) + U(1676, 606, 80, 10, rb, 2) + 'M1668 519h50v-4h-50z')
+      if (snow) a.p('w3', `${tips.map(([x = 0, y = 0]) => U(x - 6, y + 2, 12, 5, r, 2)).join('')}M136 636q0-3 4-3h16q4 0 4 3zM121 777h24v-3h-24zM224 519h50v-4h-50z${U(1566, 646, 96, 12, rb, 3)}${U(1676, 606, 80, 10, rb, 2)}M1668 519h50v-4h-50z`)
       add(-20, 1820, 6, a.s, `<circle class="ga-r" cx="148" cy="649" r="40" fill="url(#gw)"/><g class="ga-g"><circle cx="148" cy="669" r="44" fill="url(#gg)"/><path class="ga-e4 ${zc('10')}" d="M148 669h0"/></g>`)
     }
 
@@ -465,11 +472,11 @@ export const region: Region = {
       const a = pa()
       const h = pa() // thân nhà tĩnh → defs
       const [cx, cy] = CK
-      h.p('w1', R(392, 640, 408, 104) + 'M562 662V606q38-48 76 0v56z').p('w2~.7', P([[418, 660], [426, 660], [424, 712], [420, 700]]) + P([[688, 660], [695, 660], [693, 716], [690, 704]]) + P([[400, 728], [420, 716], [540, 718], [566, 728]]))
+      h.p('w1', `${R(392, 640, 408, 104)}M562 662V606q38-48 76 0v56z`).p('w2~.7', P([[418, 660], [426, 660], [424, 712], [420, 700]]) + P([[688, 660], [695, 660], [693, 716], [690, 704]]) + P([[400, 728], [420, 716], [540, 718], [566, 728]]))
       h.p('w2', P([[456, 699], [480, 697], [484, 708], [470, 714], [458, 711]])).p('s3', R(392, 726, 408, 18))
-      h.p('w3', 'M412 728V707q0-11 20-11t20 11v21z' + R(574, 688, 52, 56) + R(555, 602, 16, 4) + R(629, 602, 16, 4) + 'M566 603q34-42 68 0l-2 2q-32-39-64 0z').p('b2', R(650, 696, 62, 34)).p('p3', R(728, 698, 50, 32))
+      h.p('w3', `M412 728V707q0-11 20-11t20 11v21z${R(574, 688, 52, 56)}${R(555, 602, 16, 4)}${R(629, 602, 16, 4)}M566 603q34-42 68 0l-2 2q-32-39-64 0z`).p('b2', R(650, 696, 62, 34)).p('p3', R(728, 698, 50, 32))
       h.p('p2', R(578, 692, 20, 52) + R(603, 692, 19, 52) + R(716, 698, 12, 32) + R(778, 698, 12, 32))
-      h.p('k2', 'M416 727V708q0-8 16-8t16 8v19z' + R(732, 701, 42, 26)).p('k1', R(598, 692, 5, 52) + R(653, 699, 56, 28))
+      h.p('k2', `M416 727V708q0-8 16-8t16 8v19z${R(732, 701, 42, 26)}`).p('k1', R(598, 692, 5, 52) + R(653, 699, 56, 28))
       h.p('p3|m', R(752, 701, 2, 26) + R(732, 713, 42, 2)).p('s1', R(408, 726, 48, 3) + R(726, 730, 54, 3))
       // vệt nước chảy dưới bậu cửa & dưới mũ đầu hồi; song cửa sổ vòm; bảng phấn giờ tàu
       h.p('~k2~3~.2', 'M738 734v9m22-9v7m-330-6v8M574 607v20m52-20v14').p('~x1~1.5', 'M422 702v24m10-26v26m10-24v24')
@@ -500,20 +507,20 @@ export const region: Region = {
       const endR = P([[794, 595], [824, 650], [784, 651], [766, 596]])
       const gL = 'M562 662V606q8-11 16-17v73z'
       const gR = 'M638 662V606q-8-11-16-17v73z'
-      h.p('sh', R(370, 640, 452, 20) + R(581, 697, 14, 43) + R(606, 697, 13, 43) + (sunL ? endR + gR : endL + gL) + 'M613 620a13.5 13.5 0 0 1-20 18q14 0 20-18z')
-      h.p('hl', R(392, 726, 408, 2) + (sunL ? endL + gL : endR + gR) + 'M590 617a13 13 0 0 1 15-4q-11 1-15 9z' + P([[734, 726], [748, 703], [754, 703], [740, 726]]))
+      h.p('sh', `${R(370, 640, 452, 20) + R(581, 697, 14, 43) + R(606, 697, 13, 43) + (sunL ? endR + gR : endL + gL)}M613 620a13.5 13.5 0 0 1-20 18q14 0 20-18z`)
+      h.p('hl', `${R(392, 726, 408, 2) + (sunL ? endL + gL : endR + gR)}M590 617a13 13 0 0 1 15-4q-11 1-15 9z${P([[734, 726], [748, 703], [754, 703], [740, 726]])}`)
       box(h, 392, 640, 408, 104, 10, 14)
       box(h, 442, 586, 9, 41, 3, 4)
       if (golden) h.p('~e1~2~.45', sunL ? 'M369 649l30-55M563 660V606' : 'M823 649l-30-55M637 660V606')
       a.r(h.s)
       // phần sống: cửa sổ lên đèn, cỏ trên mái lắc gió, kim đồng hồ chạy giờ thật, tuyết
-      if (night) a.p('e2', 'M416 727V708q0-8 16-8t16 8v19z' + R(732, 701, 42, 26)).p('p3|m', R(752, 701, 2, 26) + R(732, 713, 42, 2))
+      if (night) a.p('e2', `M416 727V708q0-8 16-8t16 8v19z${R(732, 701, 42, 26)}`).p('p3|m', R(752, 701, 2, 26) + R(732, 713, 42, 2))
       if (!lite) a.r(`<use href="#ga-t" x="532" y="592"/>`)
       const hd = `calc(-${((ctx.now / 1000 + 25200) % 43200).toFixed(1)}s - var(--t)*1s)`
       a.r(`<path class="ga-hh ${dl(43200, '', hd)}" d="M${cx} ${cy + 2}v-9"/><path class="ga-mm ${dl(3600)}" d="M${cx} ${cy + 3}v-14"/><path class="ga-ss ${dl(60)}" d="M${cx} ${cy + 3}v-15"/><circle class="k1" cx="${cx}" cy="${cy}" r="1.4"/>`)
       if (snow) {
         a.r(`<path fill="url(#ga-ns)" d="${roof}"/>`)
-        a.p('w3', 'M568 600q32-38 64 0q-32-33-64 0z' + S([[386, 592], [500, 582], [562, 584], [562, 596], [410, 601]], true) + S([[638, 584], [700, 582], [810, 592], [790, 601], [638, 596]], true) + R(437, 576, 19, 5) + R(555, 599, 16, 4) + R(629, 599, 16, 4) + 'M368 650l12-20 12 18zM824 650l-12-20-12 18z')
+        a.p('w3', `M568 600q32-38 64 0q-32-33-64 0z${S([[386, 592], [500, 582], [562, 584], [562, 596], [410, 601]], true)}${S([[638, 584], [700, 582], [810, 592], [790, 601], [638, 596]], true)}${R(437, 576, 19, 5)}${R(555, 599, 16, 4)}${R(629, 599, 16, 4)}M368 650l12-20 12 18zM824 650l-12-20-12 18z`)
         a.p('~w3~2', D([[380, 652, 0, 7], [404, 652, 0, 4], [790, 652, 0, 8], [812, 651, 0, 5]]))
       }
       const glow = night
@@ -543,7 +550,7 @@ export const region: Region = {
       const segs: [number, string, string, number, number][] = [[56, 'sl', 'fb', 0, 1], [380, 's1', 'fB', 11, 1.04], [760, 's2', 'fb', 19, 0.96], [1150, 's3', 'fB', 6, 1.02]]
       const sw: number[][][] = [[], [], [], []]
       segs.forEach(([sx, sl, bl, tx, sc], i) => {
-        const ex = i + 1 < segs.length ? segs[i + 1]![0] : 1640
+        const ex = i + 1 < segs.length ? (segs[i + 1] as [number, string, string, number, number])[0] : 1640
         const s0 = i === 0 ? sx + 14 : sx
         s.r(`<path class="ga-${bl}" d="${R(sx, 801, ex - sx, 68)}"/><path fill="url(#ga-${sl})" d="${R(s0, 806, Math.min(ex, 1600) - s0, 52)}"/>`)
         // tà vẹt thay (gỗ mới b3 / bê tông s2), mục (k2 gãy đôi), thiếu (lấp đá d2) — đúng chỗ tà vẹt của pattern
@@ -552,10 +559,10 @@ export const region: Region = {
           const x = tx + sc * (8 + 27 * k)
           if (x > Math.min(ex, 1590) || x < s0) continue
           const t = (i + j * 3) % 4
-          sw[t]!.push([x, 807, 3.5, t === 2 ? 22 : 48])
+          ;(sw[t] as number[][]).push([x, 807, 3.5, t === 2 ? 22 : 48])
         }
       })
-      if (!lite) s.p('~b3~10~~b', D(sw[0]!)).p('~s2~11~~b', D(sw[1]!)).p('~k2~10~~b', D(sw[2]!)).p('~d2~14~~b', D(sw[3]!))
+      if (!lite) s.p('~b3~10~~b', D(sw[0] as number[][])).p('~s2~11~~b', D(sw[1] as number[][])).p('~k2~10~~b', D(sw[2] as number[][])).p('~d2~14~~b', D(sw[3] as number[][]))
       s.p('k1~.35', R(36, 817, 1604, 2) + R(36, 853, 1604, 3)).p('x1', R(36, 812, 1664, 5) + R(36, 846, 1624, 7)).p('x2', R(36, 811, 1664, 2) + R(36, 845, 1624, 2.4))
       // ray gần bị nhổ: đầu ray cong vểnh lên lẫn vào cỏ; cỏ trong kẽ đá dày ở hai đầu tuyến, thưa giữa
       s.p('~x1~6', 'M1660 849q12-2 20-14').p('~x2~2', 'M1660 846q12-2 20-14')
@@ -574,9 +581,9 @@ export const region: Region = {
         const lv: number[][][] = [[], [], []]
         const at: [number, number, number, number][] = [[860, 760, 112, 4], [394, 742, 30, 3], [770, 742, 30, 3], [PL0 + 10, PB + 6, PL1 - PL0 - 20, 22], [1180, 762, 40, 4], [60, 816, 1400, 34]]
         at.forEach(([x, y, w, h], k) => {
-          for (let i = 0; i < (thu ? [9, 6, 5, 9, 4, 11][k]! : 2); i += 1) lv[i % 3]!.push([x + r() * w, y + r() * h, (r() - 0.5) * 6, (r() - 0.5) * 3])
+          for (let i = 0; i < (thu ? ([9, 6, 5, 9, 4, 11][k] as number) : 2); i += 1) (lv[i % 3] as number[][]).push([x + r() * w, y + r() * h, (r() - 0.5) * 6, (r() - 0.5) * 3])
         })
-        a.p('~l1~3.2', D(lv[0]!)).p('~l3~3.2', D(lv[1]!)).p('~f1~3', D(lv[2]!))
+        a.p('~l1~3.2', D(lv[0] as number[][])).p('~l3~3.2', D(lv[1] as number[][])).p('~f1~3', D(lv[2] as number[][]))
       }
       if (xuan || ha) {
         let fw = ''
@@ -632,8 +639,8 @@ export const region: Region = {
       c.r(POSTS.map(x => `<use href="#ga-po" x="${x}" y="679"/>`).join(''))
       c.p('sh', R(X0 - 2, 677, W + 4, 2)).p('hl', R(X0 - 2, 673, W + 4, 1.5))
       box(c, 1060, 679, 6, 89, 2, 2)
-      if (golden) c.p('~e1~1.6~.5', `M${X0} 663h${W}` + POSTS.map(x => `M${x + (sunL ? -2 : 2)} 690v82`).join(''))
-      a.r(prop('pC', c.s) + `<g class="ga-sw ${dl(9.2, 'ga-den')}"><path class="ga-w" d="M948 690v10"/><path class="p2" d="M940 700h16l5 8h-26z"/><path class="p3" d="M935 707h26v2h-26z"/></g>`)
+      if (golden) c.p('~e1~1.6~.5', `M${X0} 663h${W}${POSTS.map(x => `M${x + (sunL ? -2 : 2)} 690v82`).join('')}`)
+      a.r(`${prop('pC', c.s)}<g class="ga-sw ${dl(9.2, 'ga-den')}"><path class="ga-w" d="M948 690v10"/><path class="p2" d="M940 700h16l5 8h-26z"/><path class="p3" d="M935 707h26v2h-26z"/></g>`)
       // đèn đường + bảng tên ga
       const l = pa()
       l.p('~k1~5~.3', 'M1180 765h20m92 2h16m70 0h16').p('s3', P([[1182, 765], [1198, 765], [1196, 753], [1184, 753]])).p('k2', P([[1187, 754], [1193, 754], [1192, 648], [1188, 648]])).p('~k2~2.6', 'M1190 650q0-12 12-12t12 12')
@@ -662,7 +669,7 @@ export const region: Region = {
       a.p(`~${thu ? 'd2' : 'g1'}~1.6`, fans([[1592, gy + 6, 3, -2.6, -1.2, 9], [1612, gy + 4, 4, -2.4, -0.8, 11], [1634, gy + 6, 3, -2.2, -0.9, 9]], r))
       if (dong) a.p('w3~.7', U(1586, gy + 6, 60, 6, r, 3))
       if (snow) {
-        a.p('w3', S([[X0 - 4, 658], [X0 + 200, 648], [X0 + 480, 650], [X0 + W + 4, 647], [X0 + W + 4, 658]], true) + 'M940 700h16l-2-3h-12z' + R(1491, 631, 70, 6) + P([[1560, 632], [1574, 638], [1574, 642], [1560, 637]]))
+        a.p('w3', `${S([[X0 - 4, 658], [X0 + 200, 648], [X0 + 480, 650], [X0 + W + 4, 647], [X0 + W + 4, 658]], true)}M940 700h16l-2-3h-12z${R(1491, 631, 70, 6)}${P([[1560, 632], [1574, 638], [1574, 642], [1560, 637]])}`)
         // nhũ băng dưới máng xối
         a.p('~w3~2', D(Array.from({ length: 14 }, (_, i) => [X0 + 20 + i * 50 + ((i * 17) % 23), 680, 0, 4 + ((i * 7) % 9)])))
       }
@@ -765,8 +772,8 @@ export const region: Region = {
       // hoa theo mùa, vũng nước (soi trời; đêm hắt ánh đèn)
       const nf = lite || snow ? 3 : xuan ? 20 : ha ? 10 : thu ? 6 : 3
       const fl: number[][][] = [[], []]
-      for (let i = 0; i < nf; i += 1) fl[i % 2]!.push([r() * 1770, 884 + r() * 110])
-      a.p(`~${ha ? 'f2' : 'f1'}~4.4`, D(fl[0]!)).p('~f3~3.4', D(fl[1]!))
+      for (let i = 0; i < nf; i += 1) (fl[i % 2] as number[][]).push([r() * 1770, 884 + r() * 110])
+      a.p(`~${ha ? 'f2' : 'f1'}~4.4`, D(fl[0] as number[][])).p('~f3~3.4', D(fl[1] as number[][]))
       if (wet) a.p('a2', E(980, 904, 40, 5) + E(1214, 958, 26, 4)).p('hl', E(972, 903, 18, 1.5))
       if (rain) a.r(`<ellipse class="z3 rip ${dl(3.4, 'ga-v1')}" cx="984" cy="904" rx="12" ry="2"/><ellipse class="z3" opacity=".5" cx="1210" cy="958" rx="9" ry="1.6"/>`)
       // bóng mây trôi qua đồng cỏ (nắng có mây) · lá rơi mùa thu

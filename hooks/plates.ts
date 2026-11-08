@@ -31,7 +31,7 @@ export function oklch(L: number, C: number, h: number): string {
     '#' +
     lin
       .map(x => {
-        const v = x <= 0.0031308 ? 12.92 * x : 1.055 * Math.pow(Math.max(x, 0), 1 / 2.4) - 0.055
+        const v = x <= 0.0031308 ? 12.92 * x : 1.055 * Math.max(x, 0) ** (1 / 2.4) - 0.055
         return Math.round(Math.min(1, Math.max(0, v)) * 255)
           .toString(16)
           .padStart(2, '0')
@@ -145,7 +145,7 @@ function smoothPath(points: Pt[], closed: boolean): string {
   }
   const last = points[points.length - 1] as Pt
   d += `L${n0(last[0])} ${n0(last[1])}`
-  return closed ? d + 'Z' : d
+  return closed ? `${d}Z` : d
 }
 
 // Ô chú giải dùng chung: dữ kiện thật của phiên, không bịa tỉ lệ hay toạ độ.
@@ -456,7 +456,7 @@ function renderLacquer(j: Journey, detail: Detail): string {
   for (let i = 0; i < leaves; i += 1) {
     const ang = rand() * Math.PI * 2
     const isCore = i < leaves * 0.55
-    const dist = isCore ? Math.pow(rand(), 0.9) * 62 : 60 + Math.pow(rand(), 1.4) * 240
+    const dist = isCore ? rand() ** 0.9 * 62 : 60 + rand() ** 1.4 * 240
     const size = isCore ? 12 + rand() * 14 : 2.5 + rand() * 4
     gold += leaf(W * 0.17 + Math.cos(ang) * dist * 1.5, H * 0.42 + Math.sin(ang) * dist * 0.6, size, rand)
   }
