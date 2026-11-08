@@ -1,0 +1,9 @@
+{
+  "name": "giao-dien-dep",
+  "version": "0.3.2",
+  "author": { "name": "DonQuaan" },
+  "license": "MIT",
+  "repository": "https://github.com/DonQuaan/MTCC",
+  "description": "Thế giới nền sống theo giờ thật Việt Nam (mùa, thời tiết, ngày đêm) sau lớp kính mờ, Studio đổi giao diện và thanh trạng thái cho Claude Code",
+  "types": "./types/index.d.ts"
+}

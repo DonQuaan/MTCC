@@ -1,0 +1,6 @@
+{
+  "name": "mtcc",
+  "description": "Mod Theme Claude Code",
+  "owner": { "name": "DonQuaan" },
+  "plugins": [{ "name": "giao-dien-dep", "source": "./" }]
+}
